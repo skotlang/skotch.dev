@@ -1,0 +1,94 @@
+---
+// Install command picker with Shell / Homebrew tabs and a copy button.
+// Uses client-side JS for tab switching and clipboard copy.
+---
+
+<div class="not-content install-section">
+  <!-- <h2 class="install-heading">Install Skotch</h2> -->
+  <!-- <p class="install-subtext">Get up and running in seconds.</p> -->
+
+  <div class="install-picker">
+    <div class="install-tabs" role="tablist">
+      <button
+        class="install-tab active"
+        role="tab"
+        aria-selected="true"
+        data-tab="shell"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">terminal</span>
+        Shell
+      </button>
+      <button
+        class="install-tab"
+        role="tab"
+        aria-selected="false"
+        data-tab="brew"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">local_cafe</span>
+        Homebrew
+      </button>
+    </div>
+
+    <div class="install-command-box">
+      <code class="install-command" data-command="shell">curl -fsSL https://github.com/skotlang/skotch/releases/latest/download/skotch-cli-installer.sh | sh</code>
+      <code class="install-command hidden" data-command="brew">brew install skotlang/tap/skotch</code>
+      <button class="install-copy-btn" aria-label="Copy install command" title="Copy to clipboard">
+        <span class="copy-icon material-symbols-rounded" aria-hidden="true">content_copy</span>
+        <span class="check-icon material-symbols-rounded hidden" aria-hidden="true">check</span>
+      </button>
+    </div>
+  </div>
+
+  <a class="install-releases-link" href="https://github.com/skotlang/skotch/releases/latest">
+    View all releases on GitHub
+    <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
+  </a>
+</div>
+
+<script>
+  function initInstallPicker() {
+    const tabs = document.querySelectorAll<HTMLButtonElement>('.install-tab');
+    const commands = document.querySelectorAll<HTMLElement>('.install-command');
+    const copyBtn = document.querySelector<HTMLButtonElement>('.install-copy-btn');
+    const copyIcon = copyBtn?.querySelector('.copy-icon');
+    const checkIcon = copyBtn?.querySelector('.check-icon');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab!;
+        tabs.forEach((t) => {
+          t.classList.toggle('active', t.dataset.tab === target);
+          t.setAttribute('aria-selected', String(t.dataset.tab === target));
+        });
+        commands.forEach((cmd) => {
+          cmd.classList.toggle('hidden', cmd.dataset.command !== target);
+        });
+      });
+    });
+
+    copyBtn?.addEventListener('click', async () => {
+      const visible = document.querySelector<HTMLElement>('.install-command:not(.hidden)');
+      if (!visible) return;
+      try {
+        await navigator.clipboard.writeText(visible.textContent?.trim() ?? '');
+        copyIcon?.classList.add('hidden');
+        checkIcon?.classList.remove('hidden');
+        setTimeout(() => {
+          copyIcon?.classList.remove('hidden');
+          checkIcon?.classList.add('hidden');
+        }, 2000);
+      } catch {
+        // Fallback: select text
+        const range = document.createRange();
+        range.selectNodeContents(visible);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+    });
+  }
+
+  // Run on initial load and after Astro view transitions.
+  initInstallPicker();
+  document.addEventListener('astro:page-load', initInstallPicker);
+</script>
