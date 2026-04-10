@@ -1,0 +1,52 @@
+---
+title: 'Write Kotlin. Run Everywhere.'
+description: Skotch compiles Kotlin source code into efficient JVM bytecode, targeting Android, server, and desktop platforms.
+template: splash
+editUrl: false
+tableOfContents: false
+sideBar: false
+head:
+  - tag: title
+    content: 'Skotch: Write Kotlin. Run Everywhere.'
+hero:
+  tagline: Skotch is a compiler for the Kotlin programming language, producing optimized JVM bytecode for Android, server-side, and desktop applications.
+  actions:
+    - text: Get Started
+      link: /docs/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: Language Overview
+      link: /docs/language-overview/
+      icon: right-arrow
+      variant: secondary
+---
+
+import FeatureCard from '../../components/FeatureCard.astro';
+
+<div class="feature-grid">
+
+<FeatureCard title="Modern Syntax" icon="code" link="/docs/syntax/" color="green">
+  A clean, expressive language designed for readability and safety, with modern features like pattern matching and null safety.
+</FeatureCard>
+
+<FeatureCard title="JVM Native" icon="memory" link="/docs/compiler/" color="blue">
+  Compiles directly to JVM bytecode with no runtime overhead. Full interoperability with Java and Kotlin libraries.
+</FeatureCard>
+
+<FeatureCard title="Android Ready" icon="smartphone" link="/docs/guides/android-integration/" color="purple">
+  First-class Android support with seamless integration into existing Android projects and build systems.
+</FeatureCard>
+
+<FeatureCard title="Fast Compilation" icon="bolt" link="/docs/architecture/" color="amber">
+  Incremental compilation and efficient code generation keep your development cycle fast.
+</FeatureCard>
+
+<FeatureCard title="Type Safe" icon="verified" link="/docs/types/" color="teal">
+  Strong static typing with type inference catches errors at compile time while keeping code concise.
+</FeatureCard>
+
+<FeatureCard title="Open Source" icon="public" link="/docs/faq/" color="red">
+  Skotch is free and open source. Contribute, report issues, and shape the future of the tool.
+</FeatureCard>
+
+</div>

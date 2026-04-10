@@ -1,0 +1,240 @@
+/* ── Material Symbols Rounded (self-hosted) ── */
+@font-face {
+	font-family: 'Material Symbols Rounded';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/material-symbols-rounded.ttf') format('truetype');
+}
+
+.material-symbols-rounded {
+	font-family: 'Material Symbols Rounded';
+	font-weight: normal;
+	font-style: normal;
+	font-size: 24px;
+	line-height: 1;
+	letter-spacing: normal;
+	text-transform: none;
+	display: inline-block;
+	white-space: nowrap;
+	word-wrap: normal;
+	direction: ltr;
+}
+
+/* See theme editor at https://starlight.astro.build/guides/css-and-tailwind/#color-theme-editor */
+
+/* Dark mode colors. */
+:root {
+	--sl-color-accent-low: #1a2e00;
+	--sl-color-accent: #5a9e1e;
+	--sl-color-accent-high: #b4e88a;
+	--sl-color-white: #ffffff;
+	--sl-color-gray-1: #eef2e7;
+	--sl-color-gray-2: #bcc4b0;
+	--sl-color-gray-3: #7b8f6e;
+	--sl-color-gray-4: #4a5c3e;
+	--sl-color-gray-5: #2b3b22;
+	--sl-color-gray-6: #1a2a14;
+	--sl-color-black: #111c0d;
+}
+/* Light mode colors. */
+:root[data-theme='light'] {
+	--sl-color-accent-low: #c8f0a0;
+	--sl-color-accent: #3d7a10;
+	--sl-color-accent-high: #1a3600;
+	--sl-color-white: #111c0d;
+	--sl-color-gray-1: #1a2a14;
+	--sl-color-gray-2: #2b3b22;
+	--sl-color-gray-3: #4a5c3e;
+	--sl-color-gray-4: #7b8f6e;
+	--sl-color-gray-5: #bcc4b0;
+	--sl-color-gray-6: #eef2e7;
+	--sl-color-gray-7: #f5f8f1;
+	--sl-color-black: #ffffff;
+}
+
+/* Override hero for when there is no image */
+.hero {
+  grid-template-columns: 1fr;
+  padding-bottom: 1rem;
+}
+
+.hero .copy {
+  align-items: center;
+}
+
+.hero h1 {
+  text-align: center;
+  max-width: 100%;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.hero .tagline {
+  text-align: center;
+  max-width: 100%;
+  padding-left: 3rem;
+  padding-right: 3rem;
+}
+
+.hero .actions {
+  justify-content: center;
+  text-align: center;
+  max-width: 100%;
+}
+
+/* ── Feature Cards Grid ── */
+
+.feature-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 1.25rem;
+	margin-top: 1.5rem;
+}
+
+.feature-card {
+	display: flex;
+	flex-direction: column;
+	padding: 1.75rem;
+	border-radius: 1rem;
+    background: var(--card-tint);
+	border: 1px solid var(--sl-color-gray-5);
+	text-decoration: none;
+	color: inherit;
+	transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.feature-card:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+	border-color: var(--sl-color-accent);
+}
+
+:root[data-theme='light'] .feature-card:hover {
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.feature-card-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.feature-card-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 0.625rem;
+	flex-shrink: 0;
+}
+
+.feature-card-icon .material-symbols-rounded {
+	font-size: 1.25rem;
+}
+
+/* ── Per-card gradient tints (dark mode) ── */
+.feature-card[data-color="blue"]   { --card-tint: rgba(96, 165, 250, 0.08); }
+.feature-card[data-color="amber"]  { --card-tint: rgba(251, 191, 36, 0.08); }
+.feature-card[data-color="red"]    { --card-tint: rgba(248, 113, 113, 0.08); }
+.feature-card[data-color="purple"] { --card-tint: rgba(192, 132, 252, 0.08); }
+.feature-card[data-color="green"]  { --card-tint: rgba(74, 222, 128, 0.08); }
+.feature-card[data-color="teal"]   { --card-tint: rgba(45, 212, 191, 0.08); }
+
+/* ── Per-card icon colors (dark mode) ── */
+.feature-card[data-color="blue"] .feature-card-icon   { background: #172554; }
+.feature-card[data-color="amber"] .feature-card-icon   { background: #451a03; }
+.feature-card[data-color="red"] .feature-card-icon     { background: #450a0a; }
+.feature-card[data-color="purple"] .feature-card-icon  { background: #3b0764; }
+.feature-card[data-color="green"] .feature-card-icon   { background: #052e16; }
+.feature-card[data-color="teal"] .feature-card-icon    { background: #042f2e; }
+
+.feature-card[data-color="blue"] .material-symbols-rounded   { color: #60a5fa; }
+.feature-card[data-color="amber"] .material-symbols-rounded  { color: #fbbf24; }
+.feature-card[data-color="red"] .material-symbols-rounded    { color: #f87171; }
+.feature-card[data-color="purple"] .material-symbols-rounded { color: #c084fc; }
+.feature-card[data-color="green"] .material-symbols-rounded  { color: #4ade80; }
+.feature-card[data-color="teal"] .material-symbols-rounded   { color: #2dd4bf; }
+
+/* ── Per-card gradient tints (light mode) ── */
+:root[data-theme='light'] .feature-card[data-color="blue"]   { --card-tint: rgba(37, 99, 235, 0.05); }
+:root[data-theme='light'] .feature-card[data-color="amber"]  { --card-tint: rgba(217, 119, 6, 0.05); }
+:root[data-theme='light'] .feature-card[data-color="red"]    { --card-tint: rgba(220, 38, 38, 0.05); }
+:root[data-theme='light'] .feature-card[data-color="purple"] { --card-tint: rgba(147, 51, 234, 0.05); }
+:root[data-theme='light'] .feature-card[data-color="green"]  { --card-tint: rgba(22, 163, 106, 0.05); }
+:root[data-theme='light'] .feature-card[data-color="teal"]   { --card-tint: rgba(13, 148, 136, 0.05); }
+
+/* ── Per-card icon colors (light mode) ── */
+:root[data-theme='light'] .feature-card[data-color="blue"] .feature-card-icon   { background: #dbeafe; }
+:root[data-theme='light'] .feature-card[data-color="amber"] .feature-card-icon  { background: #fef3c7; }
+:root[data-theme='light'] .feature-card[data-color="red"] .feature-card-icon    { background: #fee2e2; }
+:root[data-theme='light'] .feature-card[data-color="purple"] .feature-card-icon { background: #f3e8ff; }
+:root[data-theme='light'] .feature-card[data-color="green"] .feature-card-icon  { background: #dcfce7; }
+:root[data-theme='light'] .feature-card[data-color="teal"] .feature-card-icon   { background: #ccfbf1; }
+
+:root[data-theme='light'] .feature-card[data-color="blue"] .material-symbols-rounded   { color: #2563eb; }
+:root[data-theme='light'] .feature-card[data-color="amber"] .material-symbols-rounded  { color: #d97706; }
+:root[data-theme='light'] .feature-card[data-color="red"] .material-symbols-rounded    { color: #dc2626; }
+:root[data-theme='light'] .feature-card[data-color="purple"] .material-symbols-rounded { color: #9333ea; }
+:root[data-theme='light'] .feature-card[data-color="green"] .material-symbols-rounded  { color: #16a34a; }
+:root[data-theme='light'] .feature-card[data-color="teal"] .material-symbols-rounded   { color: #0d9488; }
+
+.feature-card-title {
+	font-size: 1.125rem;
+	font-weight: 600;
+	margin: 0;
+	color: var(--sl-color-white);
+}
+
+.feature-card-description {
+	font-size: 0.9375rem;
+	line-height: 1.6;
+	color: var(--sl-color-gray-2);
+	flex: 1;
+	margin: 0;
+}
+
+:root[data-theme='light'] .feature-card-description {
+	color: var(--sl-color-gray-3);
+}
+
+.feature-card-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin-top: 1.25rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--sl-color-accent-high);
+	transition: gap 0.2s ease;
+}
+
+:root[data-theme='light'] .feature-card-link {
+	color: var(--sl-color-accent);
+}
+
+.feature-card:hover .feature-card-link {
+	gap: 0.5rem;
+}
+
+/* ── Admonition / Aside Overrides ── */
+
+.starlight-aside {
+	border-radius: 0.75rem;
+	border-inline-start-width: 0.25rem;
+	padding: 1.125rem 1.25rem;
+}
+
+.starlight-aside--tip {
+	--sl-color-asides-text-accent: hsl(130, 55%, 75%);
+	--sl-color-asides-border: hsl(130, 60%, 40%);
+	background-color: hsl(130, 35%, 16%);
+}
+
+:root[data-theme='light'] .starlight-aside--tip {
+	--sl-color-asides-text-accent: hsl(130, 60%, 25%);
+	--sl-color-asides-border: hsl(130, 60%, 35%);
+	background-color: hsl(130, 50%, 92%);
+}
