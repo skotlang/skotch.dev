@@ -269,6 +269,53 @@ script top level.
 
 ---
 
+## `skotch lsp`
+
+Start the Language Server Protocol server on stdin/stdout for use
+by editors (VS Code, Neovim, Helix, Zed, etc.).
+
+```sh
+skotch lsp
+```
+
+The LSP server provides:
+
+| Feature | Description |
+|---------|-------------|
+| Real-time diagnostics | Syntax and type errors highlighted as you type |
+| Semantic tokens | Syntax highlighting with semantic awareness (keywords, functions, types, variables, parameters) |
+| Hover | Type information and signatures on hover (`val x: Int`, `fun greet(n: String): String`) |
+| Go-to-definition | Navigate to function, parameter, and top-level val declarations |
+| Completions | Keywords, scope identifiers, function signatures, Java class names |
+
+### Editor setup
+
+**VS Code** — add to `settings.json`:
+
+```json
+{
+  "kotlin.languageServer.path": "skotch",
+  "kotlin.languageServer.arguments": ["lsp"]
+}
+```
+
+**Neovim (nvim-lspconfig):**
+
+```lua
+require('lspconfig.configs').skotch = {
+  default_config = {
+    cmd = { 'skotch', 'lsp' },
+    filetypes = { 'kotlin' },
+    root_dir = function(fname)
+      return vim.fs.dirname(fname)
+    end,
+  },
+}
+require('lspconfig').skotch.setup({})
+```
+
+---
+
 ## `skotch test`
 
 Discover and run tests.

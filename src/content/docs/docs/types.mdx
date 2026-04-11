@@ -10,11 +10,13 @@ import { Aside } from '@astrojs/starlight/components';
 | Type | Description | Literal examples |
 |------|-------------|------------------|
 | `Int` | 32-bit signed integer | `42`, `0xFF`, `0b1010`, `1_000` |
+| `Double` | 64-bit floating-point | `3.14`, `2.5e10`, `1.0f`, `-0.5` |
 | `String` | UTF-8 string | `"hello"`, `"""raw"""`, `"$x"` |
 | `Boolean` | True or false | `true`, `false` |
 | `Char` | Single character | `'A'`, `'\n'` |
 | `Unit` | No meaningful value | Implicit void return |
 | `Any` | Top type (supertype of all types) | — |
+| `null` | Null reference | `null` |
 
 ## Type inference
 
@@ -22,8 +24,10 @@ Skotch infers types from literal initializers:
 
 ```kotlin
 val x = 42           // Int
+val pi = 3.14        // Double
 val s = "hello"      // String
 val b = true         // Boolean
+val n = null         // null
 ```
 
 Explicit type annotations are also supported:
@@ -32,6 +36,25 @@ Explicit type annotations are also supported:
 val x: Int = 42
 val s: String = "hello"
 ```
+
+## Double arithmetic
+
+`Double` supports all arithmetic operators, and mixed `Int`/`Double`
+arithmetic promotes to `Double`:
+
+```kotlin
+fun main() {
+    val a = 3.0
+    val b = 2.0
+    println(a + b)    // 5.0
+    println(a * b)    // 6.0
+    println(a / b)    // 1.5
+    println(-2.5)     // -2.5
+    println(1.0e2)    // 100.0
+}
+```
+
+## Type annotations
 
 Function parameters require explicit types. Return types can be
 inferred for expression-body functions.
@@ -54,7 +77,7 @@ not yet compiled.
 |---------|-------|
 | Nullable types (`T?`) | `?` syntax is parsed; `?.`, `?:`, `!!` operators are not yet compiled |
 | Generics (`T`, `List<Int>`) | Type parameters, bounds, and variance not implemented |
-| `Long`, `Float`, `Double` | Literal suffixes recognized; arithmetic not yet wired |
+| `Long` | Literal suffix `L` recognized; dedicated `Long` arithmetic not yet wired |
 | `Nothing` | Not implemented |
 | Smart casts | No `is` checks or type narrowing |
 | Type aliases | `typealias` not yet compiled |
