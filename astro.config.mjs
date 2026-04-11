@@ -22,7 +22,7 @@ export default defineConfig({
   },
   integrations: [
     starlight({
-      title: 'Skotch',
+      title: 'skotch',
       favicon: '/favicon.svg',
       logo: {
         src: './src/assets/skotch-icon.svg',

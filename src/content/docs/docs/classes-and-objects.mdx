@@ -5,19 +5,53 @@ description: Object-oriented programming in Kotlin.
 
 import { Aside } from '@astrojs/starlight/components';
 
-<Aside type="caution">
-Classes, objects, interfaces, data classes, sealed classes, and enums
-are parsed by Skotch's front-end but are **not yet compiled** to any
-target. Attempting to use them will produce a compiler diagnostic.
-</Aside>
+## Basic class support
 
-## Planned features
+Skotch supports basic class declarations with primary constructors and instance methods:
 
-The following Kotlin OOP features are planned for future releases:
+```kotlin
+class Calculator {
+    fun add(a: Int, b: Int): Int = a + b
+    fun multiply(a: Int, b: Int): Int = a * b
+}
+
+fun main() {
+    val calc = Calculator()
+    println(calc.add(2, 3))       // 5
+    println(calc.multiply(4, 5))  // 20
+}
+```
+
+Classes with constructor properties and field access:
+
+```kotlin
+class Point(val x: Int, val y: Int) {
+    fun distFromOriginSquared(): Int = x * x + y * y
+}
+
+fun main() {
+    val p = Point(3, 4)
+    println(p.distFromOriginSquared()) // 25
+    println(p.x)                       // 3
+    println(p.y)                       // 4
+}
+```
+
+### What works
+
+- Empty class declarations (`class Foo`)
+- Primary constructors with `val`/`var` parameters
+- Field access from outside the class (`obj.field`)
+- Field access from inside methods (implicit `this`)
+- Instance methods called via `invokevirtual`
+- Constructor calls (`Foo()`, `Point(3, 4)`)
+- String templates using fields (`"Hello, $name!"`)
+
+### Not yet supported
 
 | Feature | Description |
 |---------|-------------|
-| Classes | Constructors, properties, methods, inheritance |
+| Body properties | `var count: Int = 0` in class body |
 | Data classes | Synthesized `equals`, `hashCode`, `toString`, `copy` |
 | Interfaces | Declarations, default methods, multiple implementation |
 | Sealed classes | Sealed hierarchies with exhaustive `when` |

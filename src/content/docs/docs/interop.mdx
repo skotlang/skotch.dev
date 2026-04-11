@@ -24,17 +24,85 @@ java -cp . HelloKt
 Skotch produces DEX v035 bytecode, compatible with Android API 13+. The
 output can be included in an APK and run on Android devices or emulators.
 
-## Current limitations
+## Calling Java static methods
 
-<Aside type="caution">
-Skotch does not yet support the features needed for practical Java
-interop.
+Skotch supports calling static methods on well-known Java classes directly:
+
+```kotlin
+fun main() {
+    val timestamp = System.currentTimeMillis()
+    println(timestamp)
+
+    println(Math.abs(-42))        // 42
+    println(Math.max(10, 20))     // 20
+    println(Integer.parseInt("123")) // 123
+}
+```
+
+This also works in the REPL:
+
+```
+skotch> println(System.currentTimeMillis())
+1744385123456
+```
+
+### Fully-qualified names
+
+You can also use fully-qualified Java class names:
+
+```kotlin
+fun main() {
+    println(java.lang.System.getProperty("file.separator"))
+    println(java.lang.Math.random())
+}
+```
+
+### Import statements
+
+Explicit imports are supported:
+
+```kotlin
+import java.lang.Math
+import java.lang.Integer
+
+fun main() {
+    println(Math.abs(-42))
+    println(Integer.parseInt("123"))
+}
+```
+
+`java.lang.*` is implicitly imported, matching Kotlin's default imports.
+
+### Supported Java classes
+
+| Class | Methods | Notes |
+|-------|---------|-------|
+| `System` | `currentTimeMillis()`, `nanoTime()`, `exit(Int)`, `getProperty(String)`, `getenv(String)` | `java.lang.System` |
+| `Math` | `abs(Int)`, `max(Int,Int)`, `min(Int,Int)`, `random()`, `sqrt(Double)`, `pow(Double,Double)` | `java.lang.Math` |
+| `Integer` | `parseInt(String)`, `toString(Int)`, `valueOf(Int)` | `java.lang.Integer` |
+| `Long` | `parseLong(String)` | `java.lang.Long` |
+| `String` | `valueOf(Int)` | `java.lang.String` |
+| `Thread` | `sleep(Long)` | `java.lang.Thread` |
+
+<Aside type="tip">
+Method signatures are resolved from **real `.class` files** at compile
+time. The compiler reads from:
+
+1. **JDK jmod files** — all `*.jmod` in the JDK's `jmods/` directory
+2. **CLASSPATH** — directories and JAR files on the `CLASSPATH` env var
+
+Any public static method on any loaded class is callable, including
+overloaded variants. The compiler picks the overload matching the
+argument count.
 </Aside>
+
+## Current limitations
 
 | Feature | Status |
 |---------|--------|
-| Calling Java libraries | Not yet — no classpath support |
-| Importing Kotlin/Java packages | `import` is parsed but not enforced |
+| Calling arbitrary Java libraries | JDK classes resolved from jmod files; CLASSPATH JARs/dirs scanned |
+| `import package.Class` | **Working** — resolves class names for static calls |
+| `import package.*` | Parsed but classes not enumerated (hardcoded set only) |
 | External dependency resolution | Not yet — Maven/Gradle deps ignored |
 | Kotlin standard library | Not bundled; `println` is a compiler intrinsic |
 | Reflection | Not supported |
@@ -46,4 +114,6 @@ interop.
   standard JVM tools (`java`, `javap`, `jstack`, etc.)
 - The REPL executes compiled code in an embedded JVM via JNI
 - Multiple Skotch-compiled files can call each other's functions via
+  `invokestatic`
+- Static method calls on `System`, `Math`, `Integer`, and `String` via
   `invokestatic`

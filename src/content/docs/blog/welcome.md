@@ -4,6 +4,6 @@ date: 2026-04-10
 tags: [announcement]
 ---
 
-Welcome to the Skotch blog. Stay tuned for updates on the Skotch compiler.
+Welcome to the skotch blog. Stay tuned for updates on the skotch compiler.
 
 *Coming soon.*
