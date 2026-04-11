@@ -1,0 +1,154 @@
+---
+title: Configuration
+description: Configuring Skotch projects and build settings.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Skotch reads project configuration from standard Gradle build files. You
+do not need Gradle installed — Skotch parses these files directly.
+
+## `build.gradle.kts`
+
+### Plugins block
+
+The `plugins` block determines the build target:
+
+```kotlin
+plugins {
+    kotlin("jvm")                   // JVM target → produces a JAR
+    // or
+    id("com.android.application")   // Android target → produces an APK
+}
+```
+
+If no `plugins` block is found, Skotch defaults to the JVM target.
+
+### Project metadata
+
+```kotlin
+group = "com.example"
+version = "1.0.0"
+```
+
+The `group` is used to derive the output JAR name (e.g.,
+`com.example` → `build/example.jar`).
+
+### JVM configuration
+
+```kotlin
+application {
+    mainClass.set("com.example.MainKt")
+}
+```
+
+If no `mainClass` is specified, Skotch looks for a class whose name ends
+in `Kt` (the Kotlin convention for top-level `fun main()` in `main.kt`).
+
+### Android configuration
+
+```kotlin
+android {
+    namespace = "com.example.app"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.example.app"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+}
+```
+
+<Aside type="note">
+Android defaults if not specified: `minSdk = 24`, `targetSdk = 34`,
+`compileSdk = 34`.
+</Aside>
+
+### Signing configuration
+
+```kotlin
+android {
+    signingConfigs {
+        debug {
+            storeFile = "debug.keystore"
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+}
+```
+
+<Aside type="caution">
+Skotch currently supports PEM key files for APK signing. PKCS#12
+keystore files (`.jks`, `.keystore`) are not yet supported. Only
+RSA-PKCS1-v1.5 with SHA-256 is implemented for APK Signature Scheme v2.
+</Aside>
+
+## `settings.gradle.kts`
+
+For multi-module projects:
+
+```kotlin
+rootProject.name = "myapp"
+include(":app", ":lib", ":core")
+```
+
+Skotch reads `include()` to discover submodules and compiles them in
+dependency order. The `pluginManagement` and
+`dependencyResolutionManagement` blocks are silently skipped.
+
+## Dependencies
+
+```kotlin
+dependencies {
+    implementation(project(":lib"))
+    api(project(":core"))
+}
+```
+
+Skotch recognizes `project(":name")` references for multi-module builds
+and uses them to determine compilation order. External Maven/Gradle
+dependencies (e.g., `implementation("org.example:lib:1.0")`) are
+currently ignored.
+
+<Aside type="caution">
+External library dependencies are not yet resolved or downloaded. Only
+inter-module `project()` dependencies are supported.
+</Aside>
+
+## Source layout
+
+Skotch expects the standard Gradle/Kotlin source layout:
+
+```
+project/
+  build.gradle.kts
+  settings.gradle.kts          (optional, for multi-module)
+  src/
+    main/
+      kotlin/
+        Main.kt
+        utils/
+          Helper.kt
+```
+
+Source files are discovered recursively under `src/main/kotlin/`.
+
+## Recognized vs. skipped blocks
+
+| Block | Status |
+|-------|--------|
+| `plugins { }` | Parsed — determines build target |
+| `application { }` | Parsed — `mainClass` extracted |
+| `android { }` | Parsed — namespace, SDK versions, signing |
+| `dependencies { }` | Parsed — `project()` refs only |
+| `repositories { }` | Skipped |
+| `kotlin { }` / `java { }` | Skipped |
+| `tasks { }` | Skipped |
+| `sourceSets { }` | Skipped |
+| `allprojects { }` / `subprojects { }` | Skipped |
+| `buildscript { }` | Skipped |

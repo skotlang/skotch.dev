@@ -1,0 +1,51 @@
+---
+title: Classes and Objects
+description: Object-oriented programming in Kotlin.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution">
+Classes, objects, interfaces, data classes, sealed classes, and enums
+are parsed by Skotch's front-end but are **not yet compiled** to any
+target. Attempting to use them will produce a compiler diagnostic.
+</Aside>
+
+## Planned features
+
+The following Kotlin OOP features are planned for future releases:
+
+| Feature | Description |
+|---------|-------------|
+| Classes | Constructors, properties, methods, inheritance |
+| Data classes | Synthesized `equals`, `hashCode`, `toString`, `copy` |
+| Interfaces | Declarations, default methods, multiple implementation |
+| Sealed classes | Sealed hierarchies with exhaustive `when` |
+| Enums | Enum constants, `values()`, members |
+| Objects | Singleton declarations, companion objects |
+| Nested/inner classes | Static and non-static nested types |
+| Inheritance | `open` classes, `override`, abstract classes |
+
+## Current workarounds
+
+Until classes are supported, you can structure programs using top-level
+functions and extension functions:
+
+```kotlin
+// Instead of a class with methods, use top-level functions
+fun createGreeting(name: String): String = "Hello, $name!"
+
+// Extension functions can add methods to existing types
+fun Int.factorial(): Int {
+    var result = 1
+    for (i in 1..this) {
+        result *= i
+    }
+    return result
+}
+
+fun main() {
+    println(createGreeting("world"))
+    println(5.factorial())
+}
+```

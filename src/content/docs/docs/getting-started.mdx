@@ -1,0 +1,137 @@
+---
+title: Getting Started
+description: Install Skotch and compile your first Kotlin program.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Skotch is a Kotlin compiler written in Rust. It compiles `.kt` source files
+to JVM bytecode, DEX, LLVM IR, klib, and native executables from a single
+binary with no dependency on `kotlinc`, `javac`, or Gradle.
+
+## Prerequisites
+
+- **JDK 17+** — required for running compiled `.class` files and for the
+  REPL's embedded JVM. Set `JAVA_HOME` or have `java` on your `PATH`.
+- **clang** — required only if you want to compile to native executables
+  (`--target native`).
+
+<Aside type="tip">
+You do not need the Android SDK, Gradle, or `kotlinc` installed.
+Skotch replaces all of them for compilation.
+</Aside>
+
+## Installation
+
+<Tabs>
+<TabItem label="Homebrew">
+```sh
+brew install skotlang/tap/skotch
+```
+</TabItem>
+<TabItem label="Shell">
+```sh
+curl -fsSL https://github.com/skotlang/skotch/releases/latest/download/skotch-cli-installer.sh | sh
+```
+</TabItem>
+<TabItem label="PowerShell">
+```powershell
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/skotlang/skotch/releases/latest/download/skotch-cli-installer.ps1 | iex"
+```
+</TabItem>
+<TabItem label="From source">
+```sh
+git clone https://github.com/skotlang/skot.git
+cd skot
+cargo build --release
+# Binary: target/release/skotch
+```
+</TabItem>
+</Tabs>
+
+Pre-built binaries for macOS, Linux, and Windows are also available on the
+[Releases](https://github.com/skotlang/skot/releases) page.
+
+Verify the installation:
+
+```sh
+skotch --version
+```
+
+## Your first program
+
+Create a file called `hello.kt`:
+
+```kotlin
+fun main() {
+    println("Hello, world!")
+}
+```
+
+Compile it to a JVM `.class` file and run it:
+
+```sh
+skotch emit --target jvm hello.kt -o HelloKt.class
+java -cp . HelloKt
+```
+
+```
+Hello, world!
+```
+
+Or compile and run it as a native binary:
+
+```sh
+skotch emit --target native hello.kt -o hello
+./hello
+```
+
+## Using the REPL
+
+Skotch includes an interactive REPL backed by an in-process JVM:
+
+```sh
+skotch repl
+```
+
+```
+skotch 0.1.8 — type :quit to exit, :help for commands
+skotch> val greeting = "Hello from the REPL"
+skotch> println(greeting)
+Hello from the REPL
+```
+
+<Aside type="note">
+The REPL requires a JDK. If `JAVA_HOME` is not set and `java` is
+not on your PATH, the REPL will print a diagnostic explaining which
+paths it checked.
+</Aside>
+
+## Project builds
+
+For multi-file projects with a `build.gradle.kts`, use `skotch build`:
+
+```sh
+skotch build
+```
+
+This discovers your source files under `src/main/kotlin/`, compiles them,
+and packages the result as a JAR (JVM target) or unsigned APK (Android
+target). See [CLI Reference](/docs/cli/) for details.
+
+## Current limitations
+
+<Aside type="caution">
+Skotch covers roughly 15-20% of the Kotlin language specification. It
+handles functions, control flow, basic types, and expressions. Classes,
+generics, lambdas, nullable types, and the standard library collection
+APIs are not yet supported. See [Language Overview](/docs/language-overview/)
+for the full list.
+</Aside>
+
+## Next steps
+
+- [Language Overview](/docs/language-overview/) — What Kotlin features are supported
+- [CLI Reference](/docs/cli/) — All subcommands and flags
+- [Hello World Guide](/docs/guides/hello-world/) — Step-by-step tutorial with all targets
+- [Architecture](/docs/architecture/) — How the compiler pipeline works

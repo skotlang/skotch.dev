@@ -1,0 +1,47 @@
+---
+title: Standard Library
+description: Built-in functions available in Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="caution">
+Skotch does not bundle the Kotlin standard library. The functions listed
+below are compiler intrinsics that Skotch implements directly in each
+backend.
+</Aside>
+
+## `println`
+
+Prints a value followed by a newline.
+
+```kotlin
+println("hello")    // prints a string
+println(42)         // prints an integer
+println(true)       // prints a boolean
+println()           // prints a blank line
+```
+
+### Backend implementation
+
+| Target | String | Int | Boolean |
+|--------|--------|-----|---------|
+| JVM | `System.out.println(String)` | `System.out.println(int)` | `System.out.println(boolean)` |
+| DEX | `Ljava/io/PrintStream;->println(Ljava/lang/String;)V` | via `toString` + println | via `toString` + println |
+| LLVM IR | `puts(str)` | `printf("%d\n", val)` | conditional `puts("true")`/`puts("false")` |
+
+## Not yet available
+
+The following standard library features are not yet implemented:
+
+| Feature | Blocked on |
+|---------|------------|
+| `print()` (no newline) | Straightforward to add |
+| `readLine()` | I/O beyond println |
+| `listOf`, `mutableListOf` | Generics, classes |
+| `map`, `filter`, `fold` | Lambdas, generics |
+| `to` (Pair creation) | Classes |
+| `require`, `check` | Exception handling |
+| `String.length`, `.substring()` | Method calls on classes |
+| `Int.toString()` | Method calls on primitives |
+| Math functions (`abs`, `max`, `min`) | Standard library binding |

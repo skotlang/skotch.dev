@@ -1,0 +1,156 @@
+---
+title: Control Flow
+description: Conditionals, loops, and pattern matching in Kotlin with Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## If/else
+
+Works as both a statement and an expression:
+
+```kotlin
+// Statement
+if (x > 0) {
+    println("positive")
+} else {
+    println("non-positive")
+}
+
+// Expression (returns a value)
+val abs = if (x >= 0) x else -x
+```
+
+### Else-if chains
+
+```kotlin
+if (score >= 90) {
+    println("A")
+} else if (score >= 80) {
+    println("B")
+} else if (score >= 70) {
+    println("C")
+} else {
+    println("F")
+}
+```
+
+## When
+
+Pattern matching with optional subject:
+
+```kotlin
+// With subject
+when (day) {
+    1 -> println("Monday")
+    2 -> println("Tuesday")
+    6, 7 -> println("Weekend")
+    else -> println("Other")
+}
+
+// Without subject (acts as if/else chain)
+when {
+    temperature < 0 -> println("freezing")
+    temperature < 20 -> println("cold")
+    else -> println("warm")
+}
+```
+
+### Range patterns
+
+```kotlin
+when (score) {
+    in 90..100 -> println("A")
+    in 80..89 -> println("B")
+    in 70..79 -> println("C")
+    else -> println("F")
+}
+```
+
+### When as expression
+
+```kotlin
+val label = when (n) {
+    0 -> "zero"
+    1 -> "one"
+    else -> "many"
+}
+```
+
+### Nested when
+
+```kotlin
+when (category) {
+    "fruit" -> when (name) {
+        "apple" -> println("red")
+        "banana" -> println("yellow")
+        else -> println("unknown fruit")
+    }
+    else -> println("not a fruit")
+}
+```
+
+## For loops
+
+Iterate over integer ranges:
+
+```kotlin
+for (i in 1..10) {
+    println(i)
+}
+```
+
+<Aside type="note">
+Currently only `Int` ranges with `..` are supported. `downTo`, `step`,
+and collection iteration are not yet implemented.
+</Aside>
+
+## While loops
+
+```kotlin
+var i = 0
+while (i < 10) {
+    println(i)
+    i += 1
+}
+```
+
+## Do-while loops
+
+```kotlin
+var input = ""
+do {
+    println("enter 'quit' to exit")
+    // ... read input ...
+} while (input != "quit")
+```
+
+## Break and continue
+
+```kotlin
+for (i in 1..100) {
+    if (i % 15 == 0) continue
+    if (i > 50) break
+    println(i)
+}
+```
+
+`break` and `continue` work inside `for`, `while`, and `do-while` loops,
+including when nested inside `if` blocks within the loop body.
+
+<Aside type="caution">
+Labeled break and continue (`break@label`, `continue@label`) are not
+yet supported.
+</Aside>
+
+## Return
+
+Early return from functions:
+
+```kotlin
+fun findFirst(items: Int): Int {
+    if (items <= 0) return -1
+    // ... rest of function ...
+    return items
+}
+```

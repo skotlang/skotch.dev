@@ -1,0 +1,121 @@
+---
+title: Building a Library
+description: Creating a reusable Kotlin library module with Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Skotch supports multi-module projects where library modules are compiled
+before application modules and merged into the final output.
+
+## Project structure
+
+```
+myproject/
+  settings.gradle.kts
+  app/
+    build.gradle.kts
+    src/main/kotlin/
+      Main.kt
+  lib/
+    build.gradle.kts
+    src/main/kotlin/
+      MathUtils.kt
+```
+
+### `settings.gradle.kts`
+
+```kotlin
+rootProject.name = "myproject"
+include(":app", ":lib")
+```
+
+### `lib/build.gradle.kts`
+
+```kotlin
+plugins {
+    kotlin("jvm")
+}
+
+group = "com.example"
+version = "1.0.0"
+```
+
+### `lib/src/main/kotlin/MathUtils.kt`
+
+```kotlin
+fun factorial(n: Int): Int {
+    var result = 1
+    for (i in 1..n) {
+        result *= i
+    }
+    return result
+}
+
+fun gcd(a: Int, b: Int): Int {
+    var x = a
+    var y = b
+    while (y != 0) {
+        val temp = y
+        y = x % y
+        x = temp
+    }
+    return x
+}
+```
+
+### `app/build.gradle.kts`
+
+```kotlin
+plugins {
+    kotlin("jvm")
+    application
+}
+
+group = "com.example"
+version = "1.0.0"
+
+dependencies {
+    implementation(project(":lib"))
+}
+
+application {
+    mainClass.set("MainKt")
+}
+```
+
+### `app/src/main/kotlin/Main.kt`
+
+```kotlin
+fun main() {
+    println("5! = ${factorial(5)}")
+    println("gcd(12, 8) = ${gcd(12, 8)}")
+}
+```
+
+## Build and run
+
+```sh
+cd myproject
+skotch build
+java -jar build/example.jar
+```
+
+```
+5! = 120
+gcd(12, 8) = 4
+```
+
+Skotch reads `settings.gradle.kts` to discover modules, resolves
+`project()` dependencies, compiles `:lib` first, then `:app`, and
+merges all class files into the final JAR.
+
+## Current limitations
+
+<Aside type="caution">
+- External Maven/Gradle dependencies are not resolved. Only
+  inter-module `project()` dependencies work.
+- Publishing libraries (to Maven Central, etc.) is not supported.
+- klib output format is Skotch-specific and not compatible with
+  `kotlinc-native` klibs.
+</Aside>

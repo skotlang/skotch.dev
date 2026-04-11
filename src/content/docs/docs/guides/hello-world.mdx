@@ -1,0 +1,166 @@
+---
+title: "Hello, World!"
+description: Build and run your first Kotlin program on every target.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide walks through compiling a single Kotlin file to every
+supported target format.
+
+## Write the source
+
+Create a file called `hello.kt`:
+
+```kotlin
+fun main() {
+    println("Hello, world!")
+}
+```
+
+## Compile to each target
+
+### JVM
+
+```sh
+skotch emit --target jvm hello.kt -o HelloKt.class
+java -cp . HelloKt
+```
+
+```
+Hello, world!
+```
+
+The output is a standard Java 17 class file. You can inspect it with
+`javap -c HelloKt.class` if you have the JDK installed.
+
+### DEX
+
+```sh
+skotch emit --target dex hello.kt -o classes.dex
+```
+
+This produces a Dalvik executable suitable for inclusion in an Android
+APK. You can verify it with `dexdump -d classes.dex` if you have the
+Android SDK build-tools.
+
+### klib
+
+```sh
+skotch emit --target klib hello.kt -o hello.klib
+unzip -l hello.klib
+```
+
+A klib is a ZIP archive containing serialized IR and metadata. It serves
+as the intermediate format for the LLVM and native pipelines.
+
+### LLVM IR
+
+```sh
+skotch emit --target llvm hello.kt -o hello.ll
+cat hello.ll
+```
+
+Produces about 15 lines of textual LLVM IR. The `println` call maps to
+libc `puts`.
+
+### Native binary
+
+```sh
+skotch emit --target native hello.kt -o hello
+./hello
+```
+
+```
+Hello, world!
+```
+
+<Aside type="note">
+The native target requires `clang` on your PATH. Skotch compiles
+the LLVM IR to an object file and links it in a single `clang`
+invocation.
+</Aside>
+
+## A more interesting example
+
+Create `math.kt`:
+
+```kotlin
+fun factorial(n: Int): Int {
+    var result = 1
+    for (i in 1..n) {
+        result *= i
+    }
+    return result
+}
+
+fun main() {
+    for (i in 1..10) {
+        println("$i! = ${factorial(i)}")
+    }
+}
+```
+
+```sh
+skotch emit --target jvm math.kt -o MathKt.class
+java -cp . MathKt
+```
+
+```
+1! = 1
+2! = 2
+3! = 6
+4! = 24
+5! = 120
+6! = 720
+7! = 5040
+8! = 40320
+9! = 362880
+10! = 3628800
+```
+
+This example exercises functions, for loops, mutable variables, compound
+assignment, and string templates — all features that work across every
+target.
+
+## Project build
+
+For projects with multiple source files, use `skotch build` instead of
+`skotch emit`. Create a project directory:
+
+```
+myapp/
+  build.gradle.kts
+  src/main/kotlin/
+    Main.kt
+```
+
+With a minimal `build.gradle.kts`:
+
+```kotlin
+plugins {
+    kotlin("jvm")
+    application
+}
+
+group = "com.example"
+version = "1.0.0"
+
+application {
+    mainClass.set("MainKt")
+}
+```
+
+Then build and run:
+
+```sh
+cd myapp
+skotch build
+java -jar build/example.jar
+```
+
+## Next steps
+
+- [CLI Reference](/docs/cli/) — All available subcommands and flags
+- [Language Overview](/docs/language-overview/) — Supported Kotlin features
+- [JVM Targets](/docs/guides/jvm-targets/) — JAR packaging and Android APKs

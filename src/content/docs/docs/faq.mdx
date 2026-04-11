@@ -1,0 +1,76 @@
+---
+title: FAQ
+description: Frequently asked questions about Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## What is Skotch?
+
+Skotch is a Kotlin compiler written in Rust. It compiles Kotlin source
+files to JVM bytecode, DEX, LLVM IR, klib, and native executables. It
+replaces `kotlinc`, Gradle, and the Android SDK build tools with a
+single CLI binary.
+
+## How much of Kotlin does Skotch support?
+
+Roughly 15-20% of the Kotlin language specification. The core procedural
+subset works: functions (including extension and local functions),
+variables, all basic types, arithmetic, string templates, and all
+control-flow constructs (if/else, when, for, while, break/continue/return).
+
+Classes, generics, lambdas, nullable type operators, and the standard
+library collection APIs are not yet supported. See
+[Language Overview](/docs/language-overview/) for the complete list.
+
+## Does Skotch need Gradle, kotlinc, or the JDK?
+
+- **Gradle and kotlinc**: Not needed. Skotch parses `build.gradle.kts`
+  directly and compiles Kotlin source itself.
+- **JDK**: Needed only to *run* compiled `.class` files and for the
+  REPL's embedded JVM. Not needed for compilation to DEX, LLVM IR, klib,
+  or native targets.
+- **Android SDK**: Not needed. Skotch generates DEX bytecode and binary
+  AndroidManifest.xml without `d8`, `dx`, or `aapt2`.
+- **clang**: Needed only for the `native` target's link step.
+
+## Can I use Skotch for Android development?
+
+Skotch can produce unsigned APKs with DEX bytecode and a generated
+AndroidManifest.xml. However, it does not yet support classes, Android
+resource processing, or the Kotlin standard library — so it cannot build
+typical Android apps yet. It is suitable for Android tooling experiments
+and simple programs.
+
+## Can I use existing Kotlin/Java libraries?
+
+Not yet. Skotch does not resolve or download Maven/Gradle dependencies.
+Inter-module `project()` dependencies within a multi-module project are
+supported, but external libraries are not.
+
+## How does the REPL work?
+
+The REPL compiles each turn to a JVM class file and executes it via JNI
+in an embedded JVM within the same process. There is no JVM subprocess
+startup on each turn — the JVM is initialized once and reused.
+Declarations (`val`, `var`, `fun`) accumulate across turns so later
+expressions can reference earlier definitions.
+
+## How does Skotch validate its output?
+
+Every supported test fixture is compiled by both Skotch and the
+corresponding reference tool (`kotlinc`, `d8`, `kotlinc-native`). Both
+outputs are committed to git. CI diffs them using normalized text forms
+that strip cosmetic differences (constant pool ordering, debug
+attributes, target triples). This means CI does not need the JDK or
+Android SDK installed.
+
+## What platforms does Skotch run on?
+
+Skotch builds and runs on macOS (ARM and x86), Linux (x86_64 and
+aarch64), and Windows (x86_64). Pre-built binaries are published on
+the [Releases](https://github.com/skotlang/skot/releases) page.
+
+## How do I report a bug?
+
+Open an issue at [github.com/skotlang/skotch/issues](https://github.com/skotlang/skotch/issues).

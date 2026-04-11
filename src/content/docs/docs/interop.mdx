@@ -1,0 +1,49 @@
+---
+title: Java/Kotlin Interop
+description: Interoperability between Skotch-compiled code and the Java ecosystem.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## JVM compatibility
+
+Skotch produces standard Java 17 class files (major version 61).
+Compiled `.class` files run on any JVM that supports Java 17 or later.
+
+Top-level Kotlin functions are compiled to `static` methods on a wrapper
+class named after the source file (e.g., `main.kt` → `MainKt`). This
+matches the convention used by JetBrains' `kotlinc`.
+
+```sh
+skotch emit --target jvm hello.kt -o HelloKt.class
+java -cp . HelloKt
+```
+
+## DEX compatibility
+
+Skotch produces DEX v035 bytecode, compatible with Android API 13+. The
+output can be included in an APK and run on Android devices or emulators.
+
+## Current limitations
+
+<Aside type="caution">
+Skotch does not yet support the features needed for practical Java
+interop.
+</Aside>
+
+| Feature | Status |
+|---------|--------|
+| Calling Java libraries | Not yet — no classpath support |
+| Importing Kotlin/Java packages | `import` is parsed but not enforced |
+| External dependency resolution | Not yet — Maven/Gradle deps ignored |
+| Kotlin standard library | Not bundled; `println` is a compiler intrinsic |
+| Reflection | Not supported |
+| Annotations | Not yet compiled |
+
+## What works today
+
+- Compiled `.class` files are valid Java bytecode and can be loaded by
+  standard JVM tools (`java`, `javap`, `jstack`, etc.)
+- The REPL executes compiled code in an embedded JVM via JNI
+- Multiple Skotch-compiled files can call each other's functions via
+  `invokestatic`

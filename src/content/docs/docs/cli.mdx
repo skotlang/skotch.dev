@@ -1,0 +1,278 @@
+---
+title: CLI Reference
+description: Command-line interface for the Skotch compiler.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## `skotch emit`
+
+Compile a single `.kt` file to a target format. This is the lowest-level
+entry point — it runs the full lex/parse/typeck/MIR/backend pipeline on
+one source file and writes the output directly.
+
+```sh
+skotch emit --target <TARGET> <input.kt> -o <output>
+```
+
+### Targets
+
+| Target | Output | Description |
+|--------|--------|-------------|
+| `jvm` | `.class` | Java 17 class file (v61) |
+| `dex` | `.dex` | Dalvik executable (v035) |
+| `klib` | `.klib` | Kotlin library (zip with serialized IR) |
+| `llvm` | `.ll` | Textual LLVM IR (19+) |
+| `native` | executable | Host binary (via LLVM IR + clang link) |
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--target <TARGET>` | Required. One of `jvm`, `dex`, `klib`, `llvm`, `native`. |
+| `-o <FILE>` / `--output <FILE>` | Required. Output file path. |
+| `--norm-out <FILE>` | Write a normalized text representation alongside the binary output. Used for fixture testing. |
+
+### Examples
+
+```sh
+# Compile to JVM bytecode and run
+skotch emit --target jvm hello.kt -o HelloKt.class
+java -cp . HelloKt
+
+# Compile to DEX (for Android)
+skotch emit --target dex hello.kt -o classes.dex
+
+# Compile to LLVM IR (text)
+skotch emit --target llvm hello.kt -o hello.ll
+cat hello.ll
+
+# Compile to native binary
+skotch emit --target native hello.kt -o hello
+./hello
+
+# Emit a klib archive
+skotch emit --target klib hello.kt -o hello.klib
+unzip -l hello.klib
+```
+
+<Aside type="note">
+The `native` target requires `clang` on your PATH. This is the only
+external tool that `skotch` ever invokes.
+</Aside>
+
+---
+
+## `skotch build`
+
+Build a project from its `build.gradle.kts`. Discovers source files under
+`src/main/kotlin/`, compiles them, and packages the result.
+
+```sh
+skotch build [-C <dir>] [--target <TARGET>]
+```
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `-C <DIR>` / `--project-dir <DIR>` | Project directory. Defaults to the current directory. |
+| `--target <TARGET>` | Override the build target: `jvm`, `android`, or `native`. By default, inferred from `build.gradle.kts` plugins. |
+
+### Output
+
+| Target | Output path | Format |
+|--------|-------------|--------|
+| JVM | `build/<name>.jar` | Executable JAR with `Main-Class` manifest |
+| Android | `build/app-unsigned.apk` | Unsigned APK with `classes.dex` and binary `AndroidManifest.xml` |
+
+### What Skotch reads from `build.gradle.kts`
+
+Skotch parses a subset of the Gradle Kotlin DSL. It recognizes:
+
+```kotlin
+plugins {
+    kotlin("jvm")                       // → JVM target
+    id("com.android.application")       // → Android target
+    application                         // marker plugin
+}
+
+group = "com.example"
+version = "1.0.0"
+
+application {
+    mainClass.set("com.example.MainKt") // JVM main class
+}
+
+android {
+    namespace = "com.example.app"
+    compileSdk = 34
+    defaultConfig {
+        applicationId = "com.example.app"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+}
+```
+
+<Aside type="caution">
+Skotch does not execute the Gradle DSL — it pattern-matches against known
+blocks. Unrecognized blocks (`repositories`, `tasks`, `sourceSets`, etc.)
+are silently skipped. Variable references and function calls inside
+property assignments are not resolved.
+</Aside>
+
+### Multi-module projects
+
+Skotch reads `settings.gradle.kts` to discover modules:
+
+```kotlin
+rootProject.name = "myapp"
+include(":app", ":lib")
+```
+
+Inter-module `project(":lib")` dependencies in the `dependencies` block are
+recognized. Modules are compiled in dependency order and their class files
+are merged into the final JAR.
+
+### Examples
+
+```sh
+# Build a JVM project (infers target from build.gradle.kts)
+skotch build
+
+# Build from a specific directory
+skotch build -C /path/to/project
+
+# Override target to Android
+skotch build --target android
+
+# Build a multi-module project
+cd myapp/
+skotch build    # reads settings.gradle.kts, compiles :lib then :app
+```
+
+---
+
+## `skotch repl`
+
+Interactive Kotlin REPL with line editing, backed by an in-process JVM
+via JNI.
+
+```sh
+skotch repl [--exec <CODE>] [--file <PATH>] [--exit-after]
+```
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `-e <CODE>` / `--exec <CODE>` | Execute a snippet before entering interactive mode. Separate statements with `;`. |
+| `-f <PATH>` / `--file <PATH>` | Execute a script file before entering interactive mode. |
+| `--exit-after` | Exit after running `--exec` / `--file` instead of entering the interactive prompt. |
+
+### REPL commands
+
+| Command | Description |
+|---------|-------------|
+| `:quit` / `:exit` | Leave the REPL. |
+| `:help` | Show available commands. |
+| `:history` | Show accumulated declarations. |
+
+### How it works
+
+The REPL accumulates top-level declarations (`val`, `var`, `fun`) across
+turns. Each expression you type is wrapped in a synthetic `fun main() { }`
+along with all prior declarations, compiled to a `.class` file, and
+executed in the embedded JVM.
+
+```
+skotch> val x = 10
+skotch> val y = 20
+skotch> println(x + y)
+30
+```
+
+<Aside type="note">
+Each REPL turn gets a unique class name, so the JVM never attempts to
+redefine an existing class. The `println` output is captured by
+temporarily redirecting `System.out` through JNI.
+</Aside>
+
+### Line editing
+
+The interactive REPL uses reedline for line editing:
+
+- Arrow keys for cursor movement
+- Up/Down for history browsing
+- Ctrl-R for reverse history search
+- Ctrl-C to abort the current line
+- Ctrl-D to exit
+
+### Examples
+
+```sh
+# Interactive REPL
+skotch repl
+
+# Run a one-liner and exit
+skotch repl --exec 'println("hello")' --exit-after
+
+# Load a setup script, then go interactive
+skotch repl --file setup.kts
+
+# Pipe input (non-interactive mode)
+echo 'println(1 + 2)' | skotch repl
+```
+
+<Aside type="caution">
+Tab-completion, syntax highlighting, and multi-line input are
+not yet implemented. These are wired as extension points in the
+codebase for a future release.
+</Aside>
+
+---
+
+## `skotch run`
+
+Execute a `.kts` Kotlin script file.
+
+```sh
+skotch run <script.kts>
+```
+
+The script's contents are wrapped in a synthetic `fun main() { }`,
+compiled, and executed. Top-level `val` and `var` declarations become
+locals inside main.
+
+```sh
+# example.kts
+val name = "Kotlin"
+println("Hello from $name script!")
+```
+
+```sh
+skotch run example.kts
+```
+
+```
+Hello from Kotlin script!
+```
+
+<Aside type="caution">
+Top-level `fun` declarations inside `.kts` files are not yet supported.
+Only `val`/`var` declarations and expression statements work at the
+script top level.
+</Aside>
+
+---
+
+## `skotch test`
+
+Discover and run tests.
+
+<Aside type="note">
+This subcommand is planned but not yet implemented.
+</Aside>

@@ -1,0 +1,220 @@
+---
+title: JVM Targets
+description: Producing JAR files and Android APKs with Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Skotch can produce JVM class files, packaged JARs, DEX bytecode, and
+unsigned APKs. This guide covers project-level builds for each.
+
+## JVM: producing a JAR
+
+### Project structure
+
+```
+myapp/
+  build.gradle.kts
+  src/main/kotlin/
+    Main.kt
+    Utils.kt
+```
+
+### `build.gradle.kts`
+
+```kotlin
+plugins {
+    kotlin("jvm")
+    application
+}
+
+group = "com.example"
+version = "1.0.0"
+
+application {
+    mainClass.set("MainKt")
+}
+```
+
+### Build and run
+
+```sh
+cd myapp
+skotch build
+java -jar build/example.jar
+```
+
+The JAR includes a `META-INF/MANIFEST.MF` with the `Main-Class` header,
+so `java -jar` works directly.
+
+<Aside type="tip">
+The JAR name is derived from the `group` property. `com.example`
+produces `build/example.jar`.
+</Aside>
+
+### Multi-module JVM projects
+
+For projects with library modules:
+
+```
+myapp/
+  settings.gradle.kts
+  app/
+    build.gradle.kts
+    src/main/kotlin/Main.kt
+  lib/
+    build.gradle.kts
+    src/main/kotlin/Helper.kt
+```
+
+**`settings.gradle.kts`:**
+
+```kotlin
+rootProject.name = "myapp"
+include(":app", ":lib")
+```
+
+**`app/build.gradle.kts`:**
+
+```kotlin
+plugins {
+    kotlin("jvm")
+    application
+}
+
+dependencies {
+    implementation(project(":lib"))
+}
+
+application {
+    mainClass.set("MainKt")
+}
+```
+
+Skotch compiles `:lib` first, then `:app`, and merges all class files
+into the final JAR.
+
+```sh
+skotch build -C myapp
+```
+
+---
+
+## Android: producing an APK
+
+### Project structure
+
+```
+myapp/
+  build.gradle.kts
+  src/main/kotlin/
+    MainActivity.kt
+```
+
+### `build.gradle.kts`
+
+```kotlin
+plugins {
+    id("com.android.application")
+    kotlin("android")
+}
+
+android {
+    namespace = "com.example.myapp"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.example.myapp"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+}
+```
+
+### Build
+
+```sh
+skotch build
+# Output: build/app-unsigned.apk
+```
+
+The APK contains:
+
+- `AndroidManifest.xml` — binary AXML generated from the build config
+- `classes.dex` — DEX bytecode compiled from your Kotlin sources
+- `resources.arsc` — included if present (optional)
+
+<Aside type="caution">
+Skotch produces an **unsigned** APK. You must sign it before installing
+on a device. APK Signature Scheme v2 signing with PEM keys is supported
+(see below). PKCS#12 keystores are not yet supported.
+</Aside>
+
+<Aside type="caution">
+Skotch does not currently process Android resource XML files or
+`AndroidManifest.xml` source files. The manifest is generated from
+the `android { }` block in `build.gradle.kts`. Resource-heavy Android
+apps are not yet supported.
+</Aside>
+
+### Overriding the target
+
+If your `build.gradle.kts` uses JVM plugins but you want to produce an
+APK:
+
+```sh
+skotch build --target android
+```
+
+---
+
+## Single-file compilation
+
+For quick experiments, `skotch emit` compiles one file at a time without
+needing a project structure:
+
+```sh
+# JVM class file
+skotch emit --target jvm hello.kt -o HelloKt.class
+java -cp . HelloKt
+
+# DEX file
+skotch emit --target dex hello.kt -o classes.dex
+
+# Native binary (requires clang)
+skotch emit --target native hello.kt -o hello
+./hello
+
+# LLVM IR (text)
+skotch emit --target llvm hello.kt -o hello.ll
+
+# Kotlin library archive
+skotch emit --target klib hello.kt -o hello.klib
+```
+
+---
+
+## APK signing
+
+Skotch supports APK Signature Scheme v2 signing with PEM key files:
+
+```kotlin
+android {
+    signingConfigs {
+        debug {
+            storeFile = "keys/debug.pem"
+            storePassword = ""
+            keyAlias = "debug"
+            keyPassword = ""
+        }
+    }
+}
+```
+
+<Aside type="note">
+Only RSA-PKCS1-v1.5 with SHA-256 is currently supported. ECDSA and
+Ed25519 are not yet implemented. PKCS#12 (`.jks`, `.keystore`) files
+are not yet supported — use PEM format instead.
+</Aside>

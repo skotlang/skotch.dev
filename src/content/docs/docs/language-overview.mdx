@@ -1,0 +1,151 @@
+---
+title: Language Overview
+description: Kotlin language features supported by the Skotch compiler.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Skotch implements a growing subset of the Kotlin language. This page
+summarizes what works today and what is coming next.
+
+<Aside type="note">
+Estimated coverage: roughly 15-20% of the Kotlin language specification.
+107 test fixtures are validated across JVM, DEX, LLVM IR, klib, and
+native targets.
+</Aside>
+
+## Supported features
+
+### Functions
+
+Top-level functions with parameters, return types, expression bodies,
+extension receivers, local (nested) functions, and mutual recursion.
+
+```kotlin
+fun greet(name: String): String = "Hello, $name!"
+
+fun Int.isEven(): Boolean = this % 2 == 0
+
+fun main() {
+    println(greet("world"))
+    println(42.isEven())
+}
+```
+
+### Variables
+
+Immutable `val` and mutable `var` with type inference from literals or
+explicit type annotations.
+
+```kotlin
+val message = "hello"
+var counter = 0
+val typed: Int = 42
+```
+
+### Types
+
+| Type | Supported | Notes |
+|------|-----------|-------|
+| `Int` | Yes | 32-bit, all literal forms (decimal, hex, binary, `L`, underscores) |
+| `String` | Yes | Regular, raw (`"""`), templates (`$x`, `${expr}`) |
+| `Boolean` | Yes | `true`, `false` |
+| `Char` | Yes | `'A'`, escape sequences (`'\n'`, `'\t'`, `'\\'`) |
+| `Unit` | Yes | Implicit return type for void functions |
+| `Any` | Yes | Top type |
+| `Long` | Parsed | Lexer recognizes `L` suffix; semantics not yet wired |
+| `Float` / `Double` | Not yet | Literal parsing planned |
+| `T?` (nullable) | Parsed | `?` syntax recognized; null-safety operators not yet compiled |
+
+### Operators
+
+Arithmetic (`+`, `-`, `*`, `/`, `%`), comparison (`==`, `!=`, `<`, `>`,
+`<=`, `>=`), logical (`&&`, `||`), unary (`-`, `!`), and compound
+assignment (`+=`, `-=`, `*=`, `/=`, `%=`).
+
+String concatenation works with `+` between strings and between string
+and int.
+
+### Control flow
+
+All core control-flow constructs are implemented:
+
+- **if/else** as both statement and expression
+- **else-if chains** for multi-branch conditions
+- **when** with subject, without subject, comma patterns, `in range`
+  patterns, string/int matching, `else` default, and nesting
+- **for** loops over `Int` ranges (`for (i in 0..9)`)
+- **while** and **do-while** loops
+- **break**, **continue**, and **return** (including early return)
+
+```kotlin
+fun classify(n: Int): String = when {
+    n < 0 -> "negative"
+    n == 0 -> "zero"
+    n in 1..10 -> "small"
+    else -> "large"
+}
+```
+
+### String templates
+
+Both `$identifier` and `${expression}` interpolation forms work in regular
+and raw strings.
+
+```kotlin
+val x = 42
+println("The answer is $x")
+println("Double: ${x * 2}")
+```
+
+### Built-in functions
+
+`println()` is a compiler intrinsic with overloads for `Int`, `String`,
+`Boolean`, and no-argument (prints a blank line).
+
+### Comments
+
+Line comments (`//`) and block comments (`/* */`) are supported.
+
+---
+
+## Not yet supported
+
+<Aside type="caution">
+The following features are parsed by the front-end but produce a
+compiler diagnostic if you try to use them. They are planned for
+future releases.
+</Aside>
+
+| Feature | Status |
+|---------|--------|
+| Classes, objects, interfaces | Parsed, not yet compiled |
+| Data classes | Needs synthesized `equals`/`hashCode`/`toString`/`copy` |
+| Sealed classes | Needs exhaustiveness checking |
+| Enums | Needs enum iteration and synthetic methods |
+| Generics | Needs type parameter bounds, variance, type erasure |
+| Lambdas and closures | Needs closure capture, `it` parameter, SAM conversion |
+| Nullable types (`?.`, `?:`, `!!`) | `?` syntax parsed; operators not compiled |
+| Collections (`listOf`, `map`, `filter`) | Blocked on generics and lambdas |
+| Default and named arguments | Needs synthetic `$default` overloads |
+| Varargs | Needs `vararg` parameter and spread `*` |
+| Try/catch/finally | Needs exception tables |
+| Destructuring declarations | Needs `componentN()` synthesis |
+| Coroutines | Needs CPS state-machine transform |
+| Annotations | Needs retention and reflection metadata |
+| Operator overloading | Needs `plus`, `minus`, `compareTo`, `invoke` dispatch |
+| Type aliases | Easy — erased at compile time |
+| Float/Double/Long arithmetic | Literal forms partially recognized |
+
+---
+
+## What you can build today
+
+Skotch handles procedural Kotlin well: console programs, algorithms,
+math utilities, and build-time code generation. Programs that stay within
+top-level functions, basic types, and control flow compile and run
+correctly on all five targets.
+
+Programs that depend on classes, the Kotlin standard library collection
+APIs, or third-party libraries will need to wait for those features to
+land.

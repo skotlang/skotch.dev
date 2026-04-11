@@ -1,0 +1,95 @@
+---
+title: Error Messages
+description: Guide to Skotch compiler error messages.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Skotch prints diagnostics to stderr when compilation fails. This page
+covers common error messages and how to resolve them.
+
+## Parse errors
+
+### "expected ..."
+
+The parser encountered unexpected syntax. Check for missing braces,
+parentheses, or unsupported Kotlin syntax.
+
+```
+error: expected ')' after function parameters
+  --> hello.kt:1:20
+```
+
+### "unexpected token"
+
+A token appeared where the parser didn't expect one. This often happens
+when using syntax that Skotch doesn't yet support (e.g., lambdas, class
+bodies).
+
+## Type errors
+
+### "type mismatch: expected T, found U"
+
+An expression's type doesn't match what was expected. Common with
+function arguments:
+
+```kotlin
+fun greet(name: String) { println("Hello, $name") }
+greet(42)  // error: type mismatch: expected String, found Int
+```
+
+### "unresolved reference: X"
+
+A function or variable name was used but not declared:
+
+```kotlin
+println(foo)  // error: unresolved reference: foo
+```
+
+Check spelling and ensure the declaration appears before its use (or
+at top level, where forward references are allowed).
+
+## Feature diagnostics
+
+### "class declarations not yet supported"
+
+Skotch parses class syntax but cannot compile it yet. See
+[Classes and Objects](/docs/classes-and-objects/) for workarounds using
+top-level and extension functions.
+
+### "feature not yet supported"
+
+A catch-all for Kotlin features that are parsed but not yet compiled:
+lambdas, try/catch, generics, etc. Check the
+[Language Overview](/docs/language-overview/) for the current support
+matrix.
+
+## REPL errors
+
+### "cannot locate libjvm"
+
+The REPL needs a JDK to run. Set `JAVA_HOME` to your JDK installation
+or ensure `java` is on your `PATH`. The error message lists every path
+that was checked.
+
+<Aside type="tip">
+On macOS with Homebrew: `export JAVA_HOME=$(/usr/libexec/java_home)`
+
+On Linux: `export JAVA_HOME=/usr/lib/jvm/java-17-openjdk`
+</Aside>
+
+## Build errors
+
+### "no build.gradle.kts found"
+
+`skotch build` walks up from the project directory looking for a build
+file. Make sure you're in the right directory or use `-C` to specify it:
+
+```sh
+skotch build -C /path/to/project
+```
+
+### "no .kt files found under src/main/kotlin"
+
+Skotch expects the standard Gradle source layout. Place your Kotlin
+files under `src/main/kotlin/`.

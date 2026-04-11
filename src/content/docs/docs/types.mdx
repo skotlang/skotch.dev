@@ -1,0 +1,60 @@
+---
+title: Types
+description: Kotlin type system as supported by Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Supported types
+
+| Type | Description | Literal examples |
+|------|-------------|------------------|
+| `Int` | 32-bit signed integer | `42`, `0xFF`, `0b1010`, `1_000` |
+| `String` | UTF-8 string | `"hello"`, `"""raw"""`, `"$x"` |
+| `Boolean` | True or false | `true`, `false` |
+| `Char` | Single character | `'A'`, `'\n'` |
+| `Unit` | No meaningful value | Implicit void return |
+| `Any` | Top type (supertype of all types) | — |
+
+## Type inference
+
+Skotch infers types from literal initializers:
+
+```kotlin
+val x = 42           // Int
+val s = "hello"      // String
+val b = true         // Boolean
+```
+
+Explicit type annotations are also supported:
+
+```kotlin
+val x: Int = 42
+val s: String = "hello"
+```
+
+Function parameters require explicit types. Return types can be
+inferred for expression-body functions.
+
+```kotlin
+fun add(a: Int, b: Int) = a + b    // return type Int inferred
+fun greet(name: String): String {  // explicit return type
+    return "Hello, $name"
+}
+```
+
+## Not yet supported
+
+<Aside type="caution">
+The following type system features are recognized by the parser but
+not yet compiled.
+</Aside>
+
+| Feature | Notes |
+|---------|-------|
+| Nullable types (`T?`) | `?` syntax is parsed; `?.`, `?:`, `!!` operators are not yet compiled |
+| Generics (`T`, `List<Int>`) | Type parameters, bounds, and variance not implemented |
+| `Long`, `Float`, `Double` | Literal suffixes recognized; arithmetic not yet wired |
+| `Nothing` | Not implemented |
+| Smart casts | No `is` checks or type narrowing |
+| Type aliases | `typealias` not yet compiled |

@@ -1,0 +1,65 @@
+---
+title: Testing
+description: Testing Kotlin code compiled with Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<Aside type="note">
+The `skotch test` subcommand is planned but not yet implemented.
+</Aside>
+
+## Current state
+
+Skotch does not yet have a built-in test runner. The `skotch test`
+subcommand exists in the CLI but prints a "not yet implemented" message.
+
+## Workarounds
+
+### Manual testing with the REPL
+
+Use the REPL to test functions interactively:
+
+```sh
+skotch repl
+```
+
+```
+skotch> fun add(a: Int, b: Int): Int = a + b
+skotch> println(add(2, 3))
+5
+```
+
+### Script-based testing
+
+Write `.kts` scripts that exercise your functions and check results:
+
+```kotlin
+// test.kts
+fun add(a: Int, b: Int): Int = a + b
+
+val result = add(2, 3)
+if (result == 5) {
+    println("PASS: add(2, 3) = 5")
+} else {
+    println("FAIL: add(2, 3) = $result, expected 5")
+}
+```
+
+```sh
+skotch run test.kts
+```
+
+### Compile and run with Java
+
+Compile your code and run it with `java`:
+
+```sh
+skotch emit --target jvm tests.kt -o TestsKt.class
+java -cp . TestsKt
+```
+
+## Planned features
+
+The `skotch test` command will discover functions annotated with `@Test`
+and run them. This is blocked on annotation support in the compiler.

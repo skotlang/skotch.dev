@@ -1,0 +1,127 @@
+---
+title: Android Integration
+description: Building Android APKs with Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Skotch can produce unsigned Android APKs containing DEX bytecode and a
+generated binary AndroidManifest.xml. No Android SDK, Gradle, or `d8`
+is required.
+
+## Project setup
+
+```
+myapp/
+  build.gradle.kts
+  src/main/kotlin/
+    Main.kt
+```
+
+### `build.gradle.kts`
+
+```kotlin
+plugins {
+    id("com.android.application")
+    kotlin("android")
+}
+
+android {
+    namespace = "com.example.myapp"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.example.myapp"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+}
+```
+
+## Building
+
+```sh
+skotch build
+```
+
+Output: `build/app-unsigned.apk`
+
+The APK contains:
+
+| File | Source |
+|------|--------|
+| `AndroidManifest.xml` | Generated from the `android { }` config (binary AXML format) |
+| `classes.dex` | Compiled from `src/main/kotlin/` sources |
+
+## APK signing
+
+<Aside type="caution">
+The APK is unsigned by default. You must sign it before installing
+on a device or submitting to the Play Store.
+</Aside>
+
+Skotch supports APK Signature Scheme v2 with PEM key files. Add a
+signing config to your build file:
+
+```kotlin
+android {
+    signingConfigs {
+        debug {
+            storeFile = "keys/debug-key.pem"
+            storePassword = ""
+            keyAlias = "debug"
+            keyPassword = ""
+        }
+    }
+}
+```
+
+<Aside type="note">
+Only RSA-PKCS1-v1.5 with SHA-256 is supported. PKCS#12 keystores
+(`.jks`, `.keystore`) are not yet supported — convert to PEM format.
+</Aside>
+
+## Configuration defaults
+
+If not specified in `build.gradle.kts`:
+
+| Property | Default |
+|----------|---------|
+| `minSdk` | 24 |
+| `targetSdk` | 34 |
+| `compileSdk` | 34 |
+
+## Current limitations
+
+<Aside type="caution">
+Skotch's Android support is early-stage. The following features are
+not yet available.
+</Aside>
+
+| Feature | Status |
+|---------|--------|
+| Android resource processing (`res/`) | Not supported |
+| Source `AndroidManifest.xml` parsing | Manifest generated from build config only |
+| Android SDK APIs | Not available (no classpath/dependency support) |
+| Activity, Fragment, View classes | Blocked on class support |
+| ECDSA / Ed25519 signing | Only RSA supported |
+| PKCS#12 keystores | Not yet — use PEM |
+| `resources.arsc` generation | Not yet — only included if already present |
+| ProGuard / R8 shrinking | Not supported |
+| AAB (Android App Bundle) | Not supported |
+
+## Single-file DEX compilation
+
+For experiments, you can compile a single `.kt` file to DEX directly:
+
+```sh
+skotch emit --target dex hello.kt -o classes.dex
+```
+
+Verify the output with Android SDK tools if available:
+
+```sh
+dexdump -d classes.dex
+```

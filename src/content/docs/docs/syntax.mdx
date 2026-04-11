@@ -1,0 +1,115 @@
+---
+title: Syntax
+description: Kotlin syntax reference as supported by Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This page covers the Kotlin syntax that Skotch currently compiles.
+
+## Declarations
+
+### Functions
+
+```kotlin
+fun add(a: Int, b: Int): Int {
+    return a + b
+}
+
+// Expression body shorthand
+fun multiply(a: Int, b: Int): Int = a * b
+```
+
+### Variables
+
+```kotlin
+val name = "Skotch"          // immutable, type inferred
+var count: Int = 0           // mutable, explicit type
+```
+
+### Extension functions
+
+```kotlin
+fun Int.isEven(): Boolean = this % 2 == 0
+
+fun main() {
+    println(4.isEven())      // true
+}
+```
+
+### Local functions
+
+```kotlin
+fun main() {
+    fun helper(x: Int): Int = x * 2
+    println(helper(21))      // 42
+}
+```
+
+## Literals
+
+### Integers
+
+```kotlin
+val decimal = 42
+val hex = 0xFF
+val binary = 0b1010
+val withSeparator = 1_000_000
+val long = 100L
+```
+
+<Aside type="note">
+The `L` suffix is recognized by the lexer. Full `Long` arithmetic
+is not yet implemented in the backends.
+</Aside>
+
+### Strings
+
+```kotlin
+val regular = "hello\nworld"
+val raw = """
+    no escape processing
+    preserves newlines
+"""
+val template = "value: $x"
+val exprTemplate = "sum: ${a + b}"
+```
+
+### Characters
+
+```kotlin
+val letter = 'A'
+val newline = '\n'
+val tab = '\t'
+```
+
+### Booleans
+
+```kotlin
+val yes = true
+val no = false
+```
+
+## Operators
+
+| Category | Operators |
+|----------|----------|
+| Arithmetic | `+` `-` `*` `/` `%` |
+| Comparison | `==` `!=` `<` `>` `<=` `>=` |
+| Logical | `&&` `\|\|` `!` |
+| Unary | `-` (negation), `!` (not) |
+| Assignment | `=` `+=` `-=` `*=` `/=` `%=` |
+| String concat | `+` (String + String, String + Int) |
+
+## Comments
+
+```kotlin
+// Line comment
+
+/* Block comment */
+```
+
+## Semicolons
+
+Semicolons are optional. Skotch uses newlines as statement terminators,
+consistent with standard Kotlin.

@@ -1,0 +1,106 @@
+---
+title: Functions
+description: Defining and calling functions in Kotlin with Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Basic functions
+
+```kotlin
+fun greet(name: String): String {
+    return "Hello, $name!"
+}
+
+fun main() {
+    println(greet("world"))
+}
+```
+
+Parameters require explicit type annotations. The return type can be
+omitted for `Unit`-returning functions.
+
+## Expression body
+
+Functions with a single expression can use `=` instead of a block:
+
+```kotlin
+fun square(n: Int): Int = n * n
+fun isPositive(n: Int): Boolean = n > 0
+```
+
+## Extension functions
+
+Add methods to existing types:
+
+```kotlin
+fun Int.isEven(): Boolean = this % 2 == 0
+fun String.shout(): String = this + "!"
+
+fun main() {
+    println(42.isEven())       // true
+    println("hello".shout())   // hello!
+}
+```
+
+Inside an extension function, `this` refers to the receiver object.
+
+## Local functions
+
+Functions can be defined inside other functions:
+
+```kotlin
+fun main() {
+    fun factorial(n: Int): Int {
+        if (n <= 1) return 1
+        return n * factorial(n - 1)
+    }
+    println(factorial(10))
+}
+```
+
+Local functions can call themselves recursively.
+
+## Forward references and mutual recursion
+
+Top-level functions can reference each other regardless of declaration
+order:
+
+```kotlin
+fun isEven(n: Int): Boolean = when {
+    n == 0 -> true
+    else -> isOdd(n - 1)
+}
+
+fun isOdd(n: Int): Boolean = when {
+    n == 0 -> false
+    else -> isEven(n - 1)
+}
+```
+
+## Built-in functions
+
+`println` is a compiler intrinsic with support for multiple types:
+
+```kotlin
+println("hello")    // String
+println(42)         // Int
+println(true)       // Boolean
+println()           // blank line
+```
+
+## Not yet supported
+
+<Aside type="caution">
+The following function features are not yet implemented.
+</Aside>
+
+| Feature | Notes |
+|---------|-------|
+| Default arguments | `fun f(x: Int = 0)` |
+| Named arguments | `f(x = 1, y = 2)` |
+| Varargs | `fun f(vararg items: Int)` |
+| Lambdas | `{ x -> x + 1 }`, `{ it + 1 }` |
+| Higher-order functions | Functions that accept or return lambdas |
+| Inline functions | `inline fun` |
+| Operator overloading | `operator fun plus(other: T)` |

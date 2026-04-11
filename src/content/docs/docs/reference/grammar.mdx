@@ -1,0 +1,97 @@
+---
+title: Grammar
+description: Supported Kotlin grammar in Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This is a summary of the grammar that Skotch's recursive-descent parser
+accepts. It is a subset of the full Kotlin grammar specification.
+
+## Top-level declarations
+
+```
+file         = { topLevel } ;
+topLevel     = packageDecl | importDecl | funDecl | valDecl | varDecl ;
+packageDecl  = "package" qualifiedName ;
+importDecl   = "import" qualifiedName [ "." "*" ] ;
+```
+
+<Aside type="note">
+`package` and `import` declarations are parsed but not yet enforced.
+All functions are treated as being in the default package.
+</Aside>
+
+## Functions
+
+```
+funDecl      = "fun" [ receiverType "." ] IDENT
+               "(" [ paramList ] ")" [ ":" type ] ( block | "=" expr ) ;
+paramList    = param { "," param } ;
+param        = IDENT ":" type ;
+```
+
+## Variables
+
+```
+valDecl      = "val" IDENT [ ":" type ] "=" expr ;
+varDecl      = "var" IDENT [ ":" type ] "=" expr ;
+```
+
+## Statements
+
+```
+statement    = valDecl | varDecl | returnStmt | whileStmt | doWhileStmt
+             | forStmt | breakStmt | continueStmt | assignment | exprStmt ;
+returnStmt   = "return" [ expr ] ;
+whileStmt    = "while" "(" expr ")" block ;
+doWhileStmt  = "do" block "while" "(" expr ")" ;
+forStmt      = "for" "(" IDENT "in" expr ".." expr ")" block ;
+assignment   = IDENT assignOp expr ;
+assignOp     = "=" | "+=" | "-=" | "*=" | "/=" | "%=" ;
+```
+
+## Expressions (by precedence, lowest first)
+
+```
+expr         = disjunction ;
+disjunction  = conjunction { "||" conjunction } ;
+conjunction  = comparison { "&&" comparison } ;
+comparison   = addition { compOp addition } ;
+compOp       = "==" | "!=" | "<" | ">" | "<=" | ">=" ;
+addition     = multiplication { ("+" | "-") multiplication } ;
+multiplication = unary { ("*" | "/" | "%") unary } ;
+unary        = [ "-" | "!" ] postfix ;
+postfix      = primary { "." IDENT [ "(" [ argList ] ")" ] | "(" [ argList ] ")" } ;
+primary      = INT_LIT | STRING_LIT | CHAR_LIT | "true" | "false"
+             | IDENT | "(" expr ")" | ifExpr | whenExpr ;
+```
+
+## If expression
+
+```
+ifExpr       = "if" "(" expr ")" blockOrExpr [ "else" blockOrExpr ] ;
+```
+
+## When expression
+
+```
+whenExpr     = "when" [ "(" expr ")" ] "{" { whenEntry } "}" ;
+whenEntry    = whenCondition { "," whenCondition } "->" blockOrExpr
+             | "else" "->" blockOrExpr ;
+whenCondition = expr | "in" expr ".." expr ;
+```
+
+## Blocks
+
+```
+block        = "{" { statement } "}" ;
+blockOrExpr  = block | expr ;
+```
+
+## Types
+
+```
+type         = "Int" | "String" | "Boolean" | "Char" | "Unit" | "Any"
+             | IDENT [ "?" ] ;
+```

@@ -1,0 +1,81 @@
+---
+title: Debugging
+description: Debugging Kotlin programs compiled with Skotch.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Inspecting compiled output
+
+### JVM class files
+
+Use `javap` (from the JDK) to disassemble compiled class files:
+
+```sh
+skotch emit --target jvm hello.kt -o HelloKt.class
+javap -c HelloKt.class
+```
+
+### DEX files
+
+Use `dexdump` (from the Android SDK build-tools) to inspect DEX output:
+
+```sh
+skotch emit --target dex hello.kt -o classes.dex
+dexdump -d classes.dex
+```
+
+### LLVM IR
+
+The LLVM IR output is human-readable text:
+
+```sh
+skotch emit --target llvm hello.kt -o hello.ll
+cat hello.ll
+```
+
+### Normalized output
+
+Use `--norm-out` to write a normalized text form alongside binary output.
+This strips cosmetic differences and makes the structure easier to read:
+
+```sh
+skotch emit --target jvm hello.kt -o HelloKt.class --norm-out hello.norm.txt
+cat hello.norm.txt
+```
+
+## Using the REPL for debugging
+
+The REPL is useful for testing individual functions and expressions:
+
+```sh
+skotch repl
+```
+
+```
+skotch> fun double(x: Int): Int = x * 2
+skotch> println(double(21))
+42
+```
+
+Declarations accumulate across turns, so you can build up state
+incrementally and test as you go.
+
+## Compiler errors
+
+Skotch prints diagnostics to stderr when compilation fails. Common
+categories:
+
+| Error | Meaning |
+|-------|---------|
+| Parse error | Syntax not recognized (check for unsupported features) |
+| Unresolved reference | Function or variable name not found |
+| Type mismatch | Argument type doesn't match parameter type |
+| Feature not yet supported | Using a Kotlin feature that Skotch doesn't compile yet |
+
+<Aside type="tip">
+If you get a "not yet supported" diagnostic, check the
+[Language Overview](/docs/language-overview/) for workarounds. Many
+features that need classes can be approximated with top-level functions
+and extension functions.
+</Aside>

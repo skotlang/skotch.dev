@@ -27,10 +27,20 @@
         <span class="material-symbols-rounded" aria-hidden="true">local_cafe</span>
         Homebrew
       </button>
+      <button
+        class="install-tab"
+        role="tab"
+        aria-selected="false"
+        data-tab="powershell"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">window</span>
+        PowerShell
+      </button>
     </div>
 
     <div class="install-command-box">
       <code class="install-command" data-command="shell">curl -fsSL https://github.com/skotlang/skotch/releases/latest/download/skotch-cli-installer.sh | sh</code>
+      <code class="install-command hidden" data-command="powershell">powershell -ExecutionPolicy Bypass -c "irm https://github.com/skotlang/skotch/releases/latest/download/skotch-cli-installer.ps1 | iex"</code>
       <code class="install-command hidden" data-command="brew">brew install skotlang/tap/skotch</code>
       <button class="install-copy-btn" aria-label="Copy install command" title="Copy to clipboard">
         <span class="copy-icon material-symbols-rounded" aria-hidden="true">content_copy</span>
@@ -39,7 +49,7 @@
     </div>
   </div>
 
-  <a class="install-releases-link" href="https://github.com/skotlang/skotch/releases/latest">
+  <a class="install-releases-link" href="https://github.com/skotlang/skotch/releases/">
     View all releases on GitHub
     <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
   </a>

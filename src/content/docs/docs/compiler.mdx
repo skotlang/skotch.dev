@@ -1,0 +1,103 @@
+---
+title: Compiler
+description: How the Skotch compiler works.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Skotch compiles Kotlin source files through a shared front-end and then
+dispatches to target-specific backends. The entire pipeline runs in a
+single Rust binary with no external tool dependencies (except `clang`
+for native linking).
+
+## Pipeline overview
+
+```
+.kt source
+  → Lexer        (hand-rolled, ~250 lines)
+  → Parser       (recursive descent, ~1200 lines)
+  → Resolver     (name resolution, forward references)
+  → Type Checker (two-pass: signatures first, then bodies)
+  → MIR Lowering (AST → three-address-code IR)
+  → Backend      (target-specific code generation)
+```
+
+All targets share the first five stages. The MIR (Mid-level Intermediate
+Representation) serves as the "waist" of the compiler — backends only
+need to consume MIR, not the AST.
+
+## Backends
+
+### JVM
+
+Produces Java 17 class files (major version 61). One wrapper class per
+source file (e.g., `hello.kt` → `HelloKt.class`). Top-level functions
+become `static` methods. The constant pool, bytecode, and class structure
+are written directly using `byteorder` — no dependency on `javac` or ASM.
+
+```sh
+skotch emit --target jvm hello.kt -o HelloKt.class
+java -cp . HelloKt
+```
+
+### DEX
+
+Produces Dalvik Executable format (v035). Uses the same MIR input as the
+JVM backend but emits DEX bytecode with its index-heavy structure (string
+pools, type IDs, method IDs). Written from scratch — no dependency on `d8`
+or `dx`.
+
+```sh
+skotch emit --target dex hello.kt -o classes.dex
+```
+
+### klib
+
+Produces a `.klib` ZIP archive containing serialized MIR as JSON, a
+manifest, and source copies. This is the intermediate format used by the
+LLVM IR and native pipelines.
+
+<Aside type="note">
+Skotch klibs use a JSON-based IR format and are not interchangeable
+with klibs produced by `kotlinc-native`.
+</Aside>
+
+### LLVM IR
+
+Produces textual LLVM IR (version 19+). Skotch writes LLVM IR as plain
+formatted strings — there is no `inkwell` or `llvm-sys` dependency, which
+avoids the `libLLVM` system requirement.
+
+The runtime is libc only: `println(String)` maps to `puts`,
+`println(Int)` maps to `printf("%d\n")`.
+
+```sh
+skotch emit --target llvm hello.kt -o hello.ll
+cat hello.ll
+```
+
+### Native
+
+Chains the LLVM IR backend with a `clang` link step to produce a host
+executable. This is the only place Skotch invokes an external tool.
+
+```sh
+skotch emit --target native hello.kt -o hello
+./hello
+```
+
+## Multi-file compilation
+
+When using `skotch build`, the driver compiles each `.kt` file to a
+separate MIR module, then merges them (remapping string IDs to avoid
+collisions) into a single combined module before handing it to the
+backend. This allows functions in one file to call functions in another.
+
+## Validation
+
+Every supported test fixture is compiled by Skotch and by the corresponding
+reference tool (`kotlinc`, `d8`, `kotlinc-native`). Both outputs are
+committed to git so CI can verify agreement without needing the JDK or
+Android SDK installed. Normalized text forms strip cosmetic differences
+(constant pool ordering, debug attributes, target triples) to avoid false
+positives when diffing.
