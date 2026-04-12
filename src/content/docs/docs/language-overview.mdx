@@ -27,6 +27,7 @@ native targets.
 | [Data classes](https://kotlinlang.org/spec/declarations.html#data-class-declaration) | §4.5.6 | `data class Point(val x: Int, val y: Int)` — synthesized `toString()` producing `"Point(x=1, y=2)"` |
 | [Class declarations](https://kotlinlang.org/spec/declarations.html#class-declaration) | §4.5 | Primary constructor, field access, instance methods, `init` blocks, mutable `var` field writeback, `override fun toString()` |
 | [Increment/decrement](https://kotlinlang.org/spec/expressions.html#postfix-increment-expression) | §7.3.4 | `x++`, `x--` postfix operators on locals and class fields |
+| [Object declarations](https://kotlinlang.org/spec/declarations.html#object-declaration) | §4.5.4 | `object Singleton { fun greet() {} }` — singleton methods via `Singleton.method()` |
 | [Const val](https://kotlinlang.org/spec/declarations.html#property-declaration) | §4.2 | `const val` compile-time constants inlined at call site |
 | [Visibility modifiers](https://kotlinlang.org/spec/declarations.html#declaration-modifiers) | §4.3 | `private`, `internal`, `protected`, `open`, `abstract` — parsed and accepted (not yet enforced) |
 | [Java interop](https://kotlinlang.org/spec/platform-specific-parts.html) | §18 | Real `.class` parsing from JDK jmods + CLASSPATH; deferred resolution; clear classpath errors |
@@ -218,6 +219,20 @@ class Point(val x: Int, val y: Int) {
     override fun toString(): String = "($x, $y)"
 }
 println(Point(3, 4))  // (3, 4)
+```
+
+### Object declarations (singletons)
+
+```kotlin
+object MathUtils {
+    fun square(x: Int): Int = x * x
+    fun cube(x: Int): Int = x * x * x
+}
+
+fun main() {
+    println(MathUtils.square(5))  // 25
+    println(MathUtils.cube(3))    // 27
+}
 ```
 
 ### String templates
