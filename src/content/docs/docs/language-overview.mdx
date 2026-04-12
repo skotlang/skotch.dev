@@ -9,27 +9,121 @@ Skotch implements a growing subset of the Kotlin language. This page
 summarizes what works today and what is coming next.
 
 <Aside type="note">
-Estimated coverage: roughly 45% of the Kotlin language specification.
-220+ test fixtures are validated across JVM, DEX, LLVM IR, klib, and
+Estimated coverage: roughly 50% of the Kotlin language specification.
+270+ test fixtures are validated across JVM, DEX, LLVM IR, klib, and
 native targets.
 </Aside>
 
-## Supported features
+## Implemented and stable
+
+| Feature | Spec reference | Notes |
+|---|---|---|
+| [Function declarations](https://kotlinlang.org/spec/declarations.html#function-declaration) | §4.1 | Top-level `fun`, parameters, return types |
+| [Default parameters](https://kotlinlang.org/spec/declarations.html#function-declaration) | §4.1.1 | `fun f(x: Int = 10)` — literal defaults injected at call sites |
+| [Named arguments](https://kotlinlang.org/spec/expressions.html#named-and-default-arguments) | §7.2.2 | `f(height = 3, width = 4)` — arguments reordered to match parameter positions |
+| [Expression body functions](https://kotlinlang.org/spec/declarations.html#function-declaration) | §4.1 | `fun f() = expr` shorthand |
+| [Extension functions](https://kotlinlang.org/spec/declarations.html#extension-function-declaration) | §4.1.3 | `fun Int.isEven()`, `this` receiver, method chaining |
+| [Local functions](https://kotlinlang.org/spec/declarations.html#local-function-declaration) | §4.1.4 | `fun` inside blocks, recursive calls |
+| [Data classes](https://kotlinlang.org/spec/declarations.html#data-class-declaration) | §4.5.6 | `data class Point(val x: Int, val y: Int)` — synthesized `toString()` producing `"Point(x=1, y=2)"` |
+| [Class declarations](https://kotlinlang.org/spec/declarations.html#class-declaration) | §4.5 | Primary constructor with `val`/`var`, field access, instance methods, `init` blocks, `invokevirtual` dispatch |
+| [Const val](https://kotlinlang.org/spec/declarations.html#property-declaration) | §4.2 | `const val` compile-time constants inlined at call site |
+| [Visibility modifiers](https://kotlinlang.org/spec/declarations.html#declaration-modifiers) | §4.3 | `private`, `internal`, `protected`, `open`, `abstract` — parsed and accepted (not yet enforced) |
+| [Java interop](https://kotlinlang.org/spec/platform-specific-parts.html) | §18 | Real `.class` parsing from JDK jmods + CLASSPATH; deferred resolution; clear classpath errors |
+| [Import declarations](https://kotlinlang.org/spec/packages-and-imports.html) | §9.2 | `import java.lang.Math`, implicit `java.lang.*` |
+| [Variable declarations](https://kotlinlang.org/spec/declarations.html#property-declaration) | §4.2 | `val` (immutable), `var` (mutable), type annotations |
+| [Integer literals](https://kotlinlang.org/spec/expressions.html#integer-literals) | §7.1.1 | Decimal, hex (`0xFF`), binary (`0b1010`), underscores (`1_000`), `L` suffix |
+| [Character literals](https://kotlinlang.org/spec/expressions.html#character-literals) | §7.1.5 | `'A'`, escape sequences (`'\n'`, `'\t'`, `'\\'`) |
+| [Boolean literals](https://kotlinlang.org/spec/expressions.html#boolean-literals) | §7.1.3 | `true`, `false` |
+| [String literals](https://kotlinlang.org/spec/expressions.html#string-interpolation-expressions) | §7.1.4 | Regular, raw (`"""`), templates (`$x`, `${expr}`) |
+| [Long literals](https://kotlinlang.org/spec/expressions.html#integer-literals) | §7.1.1 | `100L`, `0xFFL` — full 64-bit arithmetic (`+`, `-`, `*`, `/`, `%`), negation, values exceeding Int range |
+| [Double/Float literals](https://kotlinlang.org/spec/expressions.html#real-literals) | §7.1.2 | `3.14`, `2.5e10`, `1.0f`, negative doubles, scientific notation |
+| [Null literal](https://kotlinlang.org/spec/expressions.html#null-literal) | §7.1.6 | `null` value, `println(null)` |
+| [Elvis operator](https://kotlinlang.org/spec/expressions.html#elvis-expressions) | §7.4.3 | `x ?: default` — null-check with fallback, supports chaining |
+| [Nullable parameters](https://kotlinlang.org/spec/type-system.html#nullable-types) | §3.3 | `fun f(x: String?): String`, nullable function parameters |
+| [Arithmetic operators](https://kotlinlang.org/spec/expressions.html#arithmetic-expressions) | §7.5 | `+`, `-`, `*`, `/`, `%` on `Int`, `Long`, and `Double` |
+| [String concatenation](https://kotlinlang.org/spec/expressions.html#arithmetic-expressions) | §7.5 | `String + String`, `String + Int/Long/Double/Bool` |
+| [Comparison operators](https://kotlinlang.org/spec/expressions.html#comparison-expressions) | §7.6 | `==`, `!=`, `<`, `>`, `<=`, `>=` (Int and String) |
+| [Logical operators](https://kotlinlang.org/spec/expressions.html#logical-disjunction-expression) | §7.8–7.9 | `&&`, `\|\|` with short-circuit evaluation |
+| [Unary operators](https://kotlinlang.org/spec/expressions.html#unary-expressions) | §7.3 | `-` (negation), `!` (not) |
+| [Compound assignment](https://kotlinlang.org/spec/expressions.html#assignments) | §7.12 | `+=`, `-=`, `*=`, `/=`, `%=` |
+| [If expression](https://kotlinlang.org/spec/expressions.html#conditional-expressions) | §7.4.1 | As statement and expression, with/without else |
+| [When expression](https://kotlinlang.org/spec/expressions.html#when-expressions) | §7.4.2 | With subject, without subject, comma patterns, `in range`, string/int matching, nested |
+| [Else-if chains](https://kotlinlang.org/spec/expressions.html#conditional-expressions) | §7.4.1 | `if {} else if {} else {}` (as statements) |
+| [For loop](https://kotlinlang.org/spec/statements.html#for-loop-statements) | §8.2 | `for (i in start..end) { }` with `Int` ranges |
+| [While loop](https://kotlinlang.org/spec/statements.html#while-loop-statements) | §8.3 | `while (cond) { }` |
+| [Do-while loop](https://kotlinlang.org/spec/statements.html#do-while-loop-statements) | §8.3 | `do { } while (cond)` |
+| [Break and continue](https://kotlinlang.org/spec/expressions.html#break-and-continue-expressions) | §7.10 | In `for`, `while`, and `do-while` loops (including nested in `if`) |
+| [Return](https://kotlinlang.org/spec/expressions.html#return-expressions) | §7.10 | Early return from functions, guard clauses (`if (cond) return expr` without braces) |
+| [Recursive functions](https://kotlinlang.org/spec/declarations.html#function-declaration) | §4.1 | Direct recursion (factorial, GCD, power), mutual recursion, multi-parameter |
+| [Function calls](https://kotlinlang.org/spec/expressions.html#function-calls-and-property-access) | §7.2 | Direct, nested, recursive, mutual recursion, extension method syntax |
+| [`println`](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.io/println.html) | stdlib | `println()`, `println(Int)`, `println(Double)`, `println(String)`, `println(Boolean)`, `println(null)` |
+| [`print`](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.io/print.html) | stdlib | `print()` without trailing newline — all type overloads |
+| [String templates](https://kotlinlang.org/spec/expressions.html#string-interpolation-expressions) | §7.1.4 | `"$var"`, `"${expr}"` usable anywhere (val, return, args) |
+| [Try-finally](https://kotlinlang.org/spec/expressions.html#try-expression) | §7.4.5 | `try { body } finally { cleanup }` — finally always executes after body |
+| [String methods](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/) | stdlib | `.length`, `.uppercase()`, `.lowercase()`, `.isEmpty()`, `.trim()`, `.substring()`, `.contains()`, `.startsWith()`, `.endsWith()`, `.indexOf()`, `.lastIndexOf()`, `.replace()`, `.get()`, `.equals()`, `.compareTo()`, `.toInt()`, `.toDouble()`, `.toLong()` |
+| [Type conversions](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/to-string.html) | stdlib | `Int.toString()`, `Long.toString()`, `Double.toString()`, `String.toInt()`, `String.toLong()`, `String.toDouble()` |
+| [Init blocks](https://kotlinlang.org/spec/declarations.html#class-initialization) | §4.5.2 | `init { }` blocks execute during construction, access constructor params |
+| Language Server Protocol | — | Real-time diagnostics, semantic tokens, hover, go-to-definition, completions via `skotch lsp` |
+
+## Not yet implemented
+
+| Feature | Spec reference | Difficulty | Notes |
+|---|---|---|---|
+| Class body properties | [§4.5](https://kotlinlang.org/spec/declarations.html#class-declaration) | Medium | `var count: Int = 0` in class body, `count++` |
+| Inheritance & override | [§4.5](https://kotlinlang.org/spec/declarations.html#class-declaration) | Hard | `open class`, `override fun`, `super` calls |
+| Data class equals/hashCode/copy | [§4.5.6](https://kotlinlang.org/spec/declarations.html#data-class-declaration) | Medium | `toString()` works; `equals()`/`hashCode()`/`copy()`/`componentN()` not yet synthesized |
+| Interfaces | [§4.5.3](https://kotlinlang.org/spec/declarations.html#interface-declaration) | Hard | Declaration, implementation, default methods |
+| Enums | [§4.5.7](https://kotlinlang.org/spec/declarations.html#enum-class-declaration) | Medium | Enum constants, entries, values() |
+| Sealed classes | [§4.5.5](https://kotlinlang.org/spec/declarations.html#sealed-class-declaration) | Hard | Sealed hierarchies, exhaustive when |
+| Generics | [§4.6](https://kotlinlang.org/spec/declarations.html#type-parameters) | Hard | Type parameters, bounds, variance |
+| Lambdas | [§7.2.10](https://kotlinlang.org/spec/expressions.html#lambda-literals) | Hard | Lambda literals, closures, `it` parameter |
+| Safe call (`?.`) | [§3.3](https://kotlinlang.org/spec/type-system.html#nullable-types) | Medium | Parsed; needs field/method dispatch on nullable receiver |
+| Non-null assert (`!!`) | [§3.3](https://kotlinlang.org/spec/type-system.html#nullable-types) | Easy | Parsed; passthrough (no NullPointerException yet) |
+| Type checks (`is`/`!is`) | [§7.6.3](https://kotlinlang.org/spec/expressions.html#type-checking-and-containment-checking-expressions) | Medium | Parsed; stub lowering (always true) |
+| Type casts (`as`/`as?`) | [§7.6.4](https://kotlinlang.org/spec/expressions.html#cast-expression) | Medium | Parsed; passthrough lowering |
+| Try/catch | [§7.4.5](https://kotlinlang.org/spec/expressions.html#try-expression) | Medium | Parsed; catch needs JVM exception tables (try/finally works) |
+| Throw expression | [§7.4.6](https://kotlinlang.org/spec/expressions.html#throw-expressions) | Medium | Parsed; needs `athrow` opcode |
+| Collections | stdlib | Hard | `listOf`, `map`, `filter`, `fold` (needs generics + lambdas) |
+| Varargs | [§4.1.2](https://kotlinlang.org/spec/declarations.html#function-declaration) | Medium | `vararg` parameter, spread `*` |
+| Type aliases | [§4.7](https://kotlinlang.org/spec/declarations.html#type-alias) | Easy | `typealias` erased at compile time |
+| Destructuring | [§8.1](https://kotlinlang.org/spec/statements.html#destructuring-declarations) | Medium | `val (a, b) = pair` via `componentN()` |
+| Coroutines | [§7.2.11](https://kotlinlang.org/spec/expressions.html#coroutine-builder-invocations) | Very Hard | `suspend`, state machine CPS transform |
+| Annotations | [§4.8](https://kotlinlang.org/spec/declarations.html#annotation-declaration) | Medium | Declaration, retention, reflection |
+| Operator overloading | [§7.5](https://kotlinlang.org/spec/expressions.html#overloadable-operators) | Medium | `plus`, `minus`, `compareTo`, `invoke` |
+| `else if` chains with return | — | Medium | All-branches-return in nested if (use `when` as workaround) |
+
+---
+
+## Feature details
 
 ### Functions
 
 Top-level functions with parameters, return types, expression bodies,
-extension receivers, local (nested) functions, and mutual recursion.
+extension receivers, local (nested) functions, default parameter values,
+named arguments, and mutual recursion.
 
 ```kotlin
-fun greet(name: String): String = "Hello, $name!"
+fun greet(name: String = "World"): String = "Hello, $name!"
+
+fun configure(host: String = "localhost", port: Int = 8080) {
+    println("$host:$port")
+}
 
 fun Int.isEven(): Boolean = this % 2 == 0
 
 fun main() {
-    println(greet("world"))
-    println(42.isEven())
+    println(greet())       // Hello, World!
+    println(greet("Kotlin")) // Hello, Kotlin!
+    configure()             // localhost:8080
+    configure("example.com", 443) // example.com:443
 }
+```
+
+Named arguments allow calling with arguments in any order:
+
+```kotlin
+fun rect(width: Int, height: Int): Int = width * height
+rect(height = 4, width = 3)  // 12 — reordered to match params
 ```
 
 ### Variables
@@ -42,30 +136,6 @@ val message = "hello"
 var counter = 0
 val typed: Int = 42
 ```
-
-### Types
-
-| Type | Supported | Notes |
-|------|-----------|-------|
-| `Int` | Yes | 32-bit, all literal forms (decimal, hex, binary, `L`, underscores) |
-| `String` | Yes | Regular, raw (`"""`), templates (`$x`, `${expr}`) |
-| `Boolean` | Yes | `true`, `false` |
-| `Char` | Yes | `'A'`, escape sequences (`'\n'`, `'\t'`, `'\\'`) |
-| `Unit` | Yes | Implicit return type for void functions |
-| `Any` | Yes | Top type |
-| `Double` | Yes | `3.14`, `2.5e10`, `1.0f` — full arithmetic, `println(Double)` |
-| `null` | Yes | `null` literal, `println(null)` |
-| `Long` | Yes | `100L`, `0xFFL` — full 64-bit arithmetic, negation, values beyond Int range |
-| `T?` (nullable) | Partial | `?:` elvis works; `?.` and `!!` parsed but not yet compiled |
-
-### Operators
-
-Arithmetic (`+`, `-`, `*`, `/`, `%`) on `Int`, `Long`, and `Double`,
-comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), logical (`&&`, `||`),
-unary (`-`, `!`), and compound assignment (`+=`, `-=`, `*=`, `/=`, `%=`).
-
-String concatenation works with `+` between strings and between string
-and int.
 
 ### Nullable types and elvis operator
 
@@ -139,9 +209,29 @@ println(s.replace("World", "Kotlin")) // Hello, Kotlin!
 println(42.toString())             // 42
 ```
 
-### Init blocks
+### Data classes
 
-Class `init` blocks execute during construction:
+Data classes get a synthesized `toString()` matching Kotlin's format:
+
+```kotlin
+data class Point(val x: Int, val y: Int)
+data class Person(val name: String, val age: Int)
+
+fun main() {
+    println(Point(1, 2))       // Point(x=1, y=2)
+    println(Person("Alice", 30)) // Person(name=Alice, age=30)
+}
+```
+
+<Aside type="note">
+`toString()` is synthesized. `equals()`, `hashCode()`, `copy()`, and
+`componentN()` are not yet generated.
+</Aside>
+
+### Classes
+
+Classes with primary constructors, `val`/`var` parameters, field access,
+instance methods, and `init` blocks:
 
 ```kotlin
 class Logger(val tag: String) {
@@ -150,12 +240,12 @@ class Logger(val tag: String) {
     }
     fun log(msg: String) { println("[$tag] $msg") }
 }
+
+fun main() {
+    val logger = Logger("App")
+    logger.log("started")
+}
 ```
-
-### Built-in functions
-
-`println()` is a compiler intrinsic with overloads for `Int`, `Double`,
-`String`, `Boolean`, `null`, and no-argument (prints a blank line).
 
 ### Const val
 
@@ -171,48 +261,14 @@ fun main() {
 }
 ```
 
-### Visibility modifiers
+### Stdlib functions
 
-`private`, `internal`, `protected`, `open`, and `abstract` are
-recognized by the parser. They don't yet enforce access control but
-allow real Kotlin code to be parsed without errors.
+`println`, `print`, `maxOf`, and `minOf` are available:
 
-### Comments
-
-Line comments (`//`) and block comments (`/* */`) are supported.
-
----
-
-## Not yet supported
-
-<Aside type="caution">
-The following features are parsed by the front-end but produce a
-compiler diagnostic if you try to use them. They are planned for
-future releases.
-</Aside>
-
-| Feature | Status |
-|---------|--------|
-| Safe call operator (`?.`) | Parsed; needs field/method dispatch on nullable receiver |
-| Non-null assertion (`!!`) | Parsed; passthrough (no NullPointerException yet) |
-| Type checks (`is`/`!is`) | Parsed; stub lowering (always true) |
-| Type casts (`as`/`as?`) | Parsed; passthrough lowering |
-| Try/catch | Parsed; catch needs JVM exception tables (try/finally works) |
-| Throw expression | Parsed; needs `athrow` opcode |
-| Data classes | Needs synthesized `equals`/`hashCode`/`toString`/`copy` |
-| Objects and interfaces | Needs INSTANCE field synthesis and `invokeinterface` |
-| Sealed classes | Needs exhaustiveness checking |
-| Enums | Needs enum iteration and synthetic methods |
-| Generics | Needs type parameter bounds, variance, type erasure |
-| Lambdas and closures | Needs closure capture, `it` parameter, SAM conversion |
-| Collections (`listOf`, `map`, `filter`) | Blocked on generics and lambdas |
-| Default and named arguments | Needs synthetic `$default` overloads |
-| Varargs | Needs `vararg` parameter and spread `*` |
-| Destructuring declarations | Needs `componentN()` synthesis |
-| Coroutines | Needs CPS state-machine transform |
-| Annotations | Needs retention and reflection metadata |
-| Operator overloading | Needs `plus`, `minus`, `compareTo`, `invoke` dispatch |
-| Type aliases | Easy — erased at compile time |
+```kotlin
+println(maxOf(10, 20))  // 20
+println(minOf(10, 20))  // 10
+```
 
 ---
 

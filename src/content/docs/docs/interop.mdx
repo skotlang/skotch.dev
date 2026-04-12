@@ -90,10 +90,14 @@ time. The compiler reads from:
 
 1. **JDK jmod files** — all `*.jmod` in the JDK's `jmods/` directory
 2. **CLASSPATH** — directories and JAR files on the `CLASSPATH` env var
+3. **Kotlin stdlib** — `kotlin-stdlib.jar` located via `KOTLIN_HOME`,
+   `CLASSPATH`, or by resolving the `kotlinc` binary on PATH
 
-Any public static method on any loaded class is callable, including
-overloaded variants. The compiler picks the overload matching the
-argument count.
+Instance methods on built-in types (`String.length`, `String.substring()`,
+etc.) are resolved dynamically from `java.lang.String`'s class file.
+Kotlin-specific extension functions (like `String.uppercase()`) are mapped
+to their JVM equivalents (`String.toUpperCase()`) via a small translation
+table.
 </Aside>
 
 ## Current limitations

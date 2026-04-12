@@ -1,0 +1,76 @@
+---
+// Dynamic badge showing the latest GitHub release version.
+// Fetches from the GitHub API client-side so it stays current
+// without rebuilding the site.
+---
+
+<a
+  class="github-release-badge"
+  href="https://github.com/skotlang/skotch/releases/latest"
+  target="_blank"
+  rel="noopener"
+  aria-label="Latest release"
+>
+  <span class="badge-icon material-symbols-rounded" aria-hidden="true">new_releases</span>
+  <span class="badge-version" data-loading>...</span>
+</a>
+
+<script>
+  async function fetchLatestRelease() {
+    const el = document.querySelector('.badge-version');
+    if (!el) return;
+    try {
+      const res = await fetch(
+        'https://api.github.com/repos/skotlang/skotch/releases/latest',
+        { headers: { Accept: 'application/vnd.github.v3+json' } }
+      );
+      if (!res.ok) throw new Error(res.statusText);
+      const data = await res.json();
+      el.textContent = data.tag_name || data.name || '?';
+    } catch {
+      el.textContent = 'latest';
+    }
+    el.removeAttribute('data-loading');
+  }
+  fetchLatestRelease();
+  document.addEventListener('astro:page-load', fetchLatestRelease);
+</script>
+
+<style>
+  .github-release-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 2rem;
+    border: 1px solid var(--sl-color-gray-5);
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-accent-high);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .github-release-badge:hover {
+    border-color: var(--sl-color-accent);
+    color: var(--sl-color-white);
+  }
+
+  :root[data-theme='light'] .github-release-badge {
+    color: var(--sl-color-accent);
+  }
+
+  :root[data-theme='light'] .github-release-badge:hover {
+    color: var(--sl-color-accent-high);
+  }
+
+  .badge-icon {
+    font-size: 0.875rem;
+  }
+
+  .badge-version[data-loading] {
+    opacity: 0.4;
+  }
+</style>
