@@ -10,7 +10,7 @@ summarizes what works today and what is coming next.
 
 <Aside type="note">
 Estimated coverage: roughly 50% of the Kotlin language specification.
-270+ test fixtures are validated across JVM, DEX, LLVM IR, klib, and
+275+ test fixtures are validated across JVM, DEX, LLVM IR, klib, and
 native targets.
 </Aside>
 
@@ -135,6 +135,19 @@ explicit type annotations.
 val message = "hello"
 var counter = 0
 val typed: Int = 42
+```
+
+### Type conversions
+
+String-to-number conversions work in expressions:
+
+```kotlin
+val x = "42".toInt() + 8     // 50
+val y = "3.14".toDouble()     // 3.14
+val z = "100".toLong() * 2L   // 200
+val s = 42.toString()         // "42"
+val u = "hello".uppercase()   // "HELLO"
+println("hello".length + 1)   // 6
 ```
 
 ### Nullable types and elvis operator
