@@ -75,9 +75,11 @@ not yet compiled.
 
 | Feature | Notes |
 |---------|-------|
-| Nullable types (`T?`) | `?` syntax is parsed; `?.`, `?:`, `!!` operators are not yet compiled |
+| Nullable operators (`?.`, `?:`, `!!`) | Parsed and resolved; JVM codegen needs reference-type comparison |
+| Type checks (`is`/`!is`) | Parsed; always evaluates to `true` (no runtime type info yet) |
+| Type casts (`as`/`as?`) | Parsed; passthrough (no `checkcast` emitted yet) |
 | Generics (`T`, `List<Int>`) | Type parameters, bounds, and variance not implemented |
 | `Long` | Literal suffix `L` recognized; dedicated `Long` arithmetic not yet wired |
 | `Nothing` | Not implemented |
-| Smart casts | No `is` checks or type narrowing |
+| Smart casts | Flow-sensitive type narrowing after `is` checks |
 | Type aliases | `typealias` not yet compiled |

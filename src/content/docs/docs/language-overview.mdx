@@ -9,8 +9,8 @@ Skotch implements a growing subset of the Kotlin language. This page
 summarizes what works today and what is coming next.
 
 <Aside type="note">
-Estimated coverage: roughly 15-20% of the Kotlin language specification.
-107 test fixtures are validated across JVM, DEX, LLVM IR, klib, and
+Estimated coverage: roughly 40% of the Kotlin language specification.
+190+ test fixtures are validated across JVM, DEX, LLVM IR, klib, and
 native targets.
 </Aside>
 
@@ -53,18 +53,36 @@ val typed: Int = 42
 | `Char` | Yes | `'A'`, escape sequences (`'\n'`, `'\t'`, `'\\'`) |
 | `Unit` | Yes | Implicit return type for void functions |
 | `Any` | Yes | Top type |
+| `Double` | Yes | `3.14`, `2.5e10`, `1.0f` — full arithmetic, `println(Double)` |
+| `null` | Yes | `null` literal, `println(null)` |
 | `Long` | Parsed | Lexer recognizes `L` suffix; semantics not yet wired |
-| `Float` / `Double` | Not yet | Literal parsing planned |
-| `T?` (nullable) | Parsed | `?` syntax recognized; null-safety operators not yet compiled |
+| `T?` (nullable) | Parsed | `?` syntax, `?.`, `?:`, `!!` operators parsed; JVM codegen in progress |
 
 ### Operators
 
-Arithmetic (`+`, `-`, `*`, `/`, `%`), comparison (`==`, `!=`, `<`, `>`,
-`<=`, `>=`), logical (`&&`, `||`), unary (`-`, `!`), and compound
-assignment (`+=`, `-=`, `*=`, `/=`, `%=`).
+Arithmetic (`+`, `-`, `*`, `/`, `%`) on both `Int` and `Double`,
+comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), logical (`&&`, `||`),
+unary (`-`, `!`), and compound assignment (`+=`, `-=`, `*=`, `/=`, `%=`).
 
 String concatenation works with `+` between strings and between string
 and int.
+
+### Nullable types and elvis operator
+
+Functions can accept nullable parameters (`String?`). The elvis operator
+(`?:`) provides a default value when the left-hand side is null:
+
+```kotlin
+fun greet(name: String?): String = name ?: "anonymous"
+
+fun first(a: String?, b: String?): String = a ?: b ?: "none"
+
+fun main() {
+    println(greet("Alice"))    // Alice
+    println(greet(null))       // anonymous
+    println(first(null, null)) // none
+}
+```
 
 ### Control flow
 
@@ -76,7 +94,9 @@ All core control-flow constructs are implemented:
   patterns, string/int matching, `else` default, and nesting
 - **for** loops over `Int` ranges (`for (i in 0..9)`)
 - **while** and **do-while** loops
-- **break**, **continue**, and **return** (including early return)
+- **break**, **continue**, and **return** (including early return and
+  guard clauses: `if (n <= 1) return n`)
+- **try/finally** — finally block always executes after try body
 
 ```kotlin
 fun classify(n: Int): String = when {
@@ -100,8 +120,28 @@ println("Double: ${x * 2}")
 
 ### Built-in functions
 
-`println()` is a compiler intrinsic with overloads for `Int`, `String`,
-`Boolean`, and no-argument (prints a blank line).
+`println()` is a compiler intrinsic with overloads for `Int`, `Double`,
+`String`, `Boolean`, `null`, and no-argument (prints a blank line).
+
+### Const val
+
+Compile-time constants are inlined at their call site:
+
+```kotlin
+const val PI = 3.14159
+const val APP_NAME = "skotch"
+
+fun main() {
+    println(PI)        // 3.14159
+    println(APP_NAME)  // skotch
+}
+```
+
+### Visibility modifiers
+
+`private`, `internal`, `protected`, `open`, and `abstract` are
+recognized by the parser. They don't yet enforce access control but
+allow real Kotlin code to be parsed without errors.
 
 ### Comments
 
@@ -119,33 +159,75 @@ future releases.
 
 | Feature | Status |
 |---------|--------|
-| Classes, objects, interfaces | Parsed, not yet compiled |
+| Safe call operator (`?.`) | Parsed; needs field/method dispatch on nullable receiver |
+| Non-null assertion (`!!`) | Parsed; passthrough (no NullPointerException yet) |
+| Type checks (`is`/`!is`) | Parsed; stub lowering (always true) |
+| Type casts (`as`/`as?`) | Parsed; passthrough lowering |
+| Try/catch | Parsed; catch needs JVM exception tables (try/finally works) |
+| Throw expression | Parsed; needs `athrow` opcode |
 | Data classes | Needs synthesized `equals`/`hashCode`/`toString`/`copy` |
+| Objects and interfaces | Needs INSTANCE field synthesis and `invokeinterface` |
 | Sealed classes | Needs exhaustiveness checking |
 | Enums | Needs enum iteration and synthetic methods |
 | Generics | Needs type parameter bounds, variance, type erasure |
 | Lambdas and closures | Needs closure capture, `it` parameter, SAM conversion |
-| Nullable types (`?.`, `?:`, `!!`) | `?` syntax parsed; operators not compiled |
 | Collections (`listOf`, `map`, `filter`) | Blocked on generics and lambdas |
 | Default and named arguments | Needs synthetic `$default` overloads |
 | Varargs | Needs `vararg` parameter and spread `*` |
-| Try/catch/finally | Needs exception tables |
 | Destructuring declarations | Needs `componentN()` synthesis |
 | Coroutines | Needs CPS state-machine transform |
 | Annotations | Needs retention and reflection metadata |
 | Operator overloading | Needs `plus`, `minus`, `compareTo`, `invoke` dispatch |
 | Type aliases | Easy — erased at compile time |
-| Float/Double/Long arithmetic | Literal forms partially recognized |
 
 ---
 
 ## What you can build today
 
-Skotch handles procedural Kotlin well: console programs, algorithms,
-math utilities, and build-time code generation. Programs that stay within
-top-level functions, basic types, and control flow compile and run
-correctly on all five targets.
+Skotch handles procedural and object-oriented Kotlin well: console
+programs, algorithms, math utilities, classes with constructors and
+methods, and null-safe code using the elvis operator. Programs that
+use functions, control flow, basic types, Double arithmetic, and
+nullable parameters compile and run correctly on all five targets.
 
-Programs that depend on classes, the Kotlin standard library collection
-APIs, or third-party libraries will need to wait for those features to
-land.
+### Example: Fibonacci sequence
+
+```kotlin
+fun fibonacci(n: Int): Int {
+    if (n <= 1) return n
+    var a = 0
+    var b = 1
+    for (i in 2..n) {
+        val temp = a + b
+        a = b
+        b = temp
+    }
+    return b
+}
+
+fun main() {
+    for (i in 0..10) {
+        println(fibonacci(i))
+    }
+}
+```
+
+### Example: Recursive GCD
+
+```kotlin
+fun gcd(a: Int, b: Int): Int {
+    if (b == 0) return a
+    return gcd(b, a % b)
+}
+```
+
+### Example: Null-safe parameter handling
+
+```kotlin
+fun greet(name: String?): String = name ?: "World"
+fun first(a: String?, b: String?): String = a ?: b ?: "none"
+```
+
+Programs that depend on the Kotlin standard library collection APIs,
+generics, lambdas, or third-party libraries will need to wait for
+those features to land.
