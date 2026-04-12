@@ -9,8 +9,8 @@ Skotch implements a growing subset of the Kotlin language. This page
 summarizes what works today and what is coming next.
 
 <Aside type="note">
-Estimated coverage: roughly 50% of the Kotlin language specification.
-275+ test fixtures are validated across JVM, DEX, LLVM IR, klib, and
+Estimated coverage: roughly 55% of the Kotlin language specification.
+295+ test fixtures are validated across JVM, DEX, LLVM IR, klib, and
 native targets.
 </Aside>
 
@@ -25,7 +25,8 @@ native targets.
 | [Extension functions](https://kotlinlang.org/spec/declarations.html#extension-function-declaration) | §4.1.3 | `fun Int.isEven()`, `this` receiver, method chaining |
 | [Local functions](https://kotlinlang.org/spec/declarations.html#local-function-declaration) | §4.1.4 | `fun` inside blocks, recursive calls |
 | [Data classes](https://kotlinlang.org/spec/declarations.html#data-class-declaration) | §4.5.6 | `data class Point(val x: Int, val y: Int)` — synthesized `toString()` producing `"Point(x=1, y=2)"` |
-| [Class declarations](https://kotlinlang.org/spec/declarations.html#class-declaration) | §4.5 | Primary constructor with `val`/`var`, field access, instance methods, `init` blocks, `invokevirtual` dispatch |
+| [Class declarations](https://kotlinlang.org/spec/declarations.html#class-declaration) | §4.5 | Primary constructor, field access, instance methods, `init` blocks, mutable `var` field writeback, `override fun toString()` |
+| [Increment/decrement](https://kotlinlang.org/spec/expressions.html#postfix-increment-expression) | §7.3.4 | `x++`, `x--` postfix operators on locals and class fields |
 | [Const val](https://kotlinlang.org/spec/declarations.html#property-declaration) | §4.2 | `const val` compile-time constants inlined at call site |
 | [Visibility modifiers](https://kotlinlang.org/spec/declarations.html#declaration-modifiers) | §4.3 | `private`, `internal`, `protected`, `open`, `abstract` — parsed and accepted (not yet enforced) |
 | [Java interop](https://kotlinlang.org/spec/platform-specific-parts.html) | §18 | Real `.class` parsing from JDK jmods + CLASSPATH; deferred resolution; clear classpath errors |
@@ -49,7 +50,7 @@ native targets.
 | [If expression](https://kotlinlang.org/spec/expressions.html#conditional-expressions) | §7.4.1 | As statement and expression, with/without else |
 | [When expression](https://kotlinlang.org/spec/expressions.html#when-expressions) | §7.4.2 | With subject, without subject, comma patterns, `in range`, string/int matching, nested |
 | [Else-if chains](https://kotlinlang.org/spec/expressions.html#conditional-expressions) | §7.4.1 | `if {} else if {} else {}` (as statements) |
-| [For loop](https://kotlinlang.org/spec/statements.html#for-loop-statements) | §8.2 | `for (i in start..end) { }` with `Int` ranges |
+| [For loop](https://kotlinlang.org/spec/statements.html#for-loop-statements) | §8.2 | `..` (inclusive), `until` (exclusive), `downTo` (descending) |
 | [While loop](https://kotlinlang.org/spec/statements.html#while-loop-statements) | §8.3 | `while (cond) { }` |
 | [Do-while loop](https://kotlinlang.org/spec/statements.html#do-while-loop-statements) | §8.3 | `do { } while (cond)` |
 | [Break and continue](https://kotlinlang.org/spec/expressions.html#break-and-continue-expressions) | §7.10 | In `for`, `while`, and `do-while` loops (including nested in `if`) |
@@ -175,7 +176,8 @@ All core control-flow constructs are implemented:
 - **else-if chains** for multi-branch conditions
 - **when** with subject, without subject, comma patterns, `in range`
   patterns, string/int matching, `else` default, and nesting
-- **for** loops over `Int` ranges (`for (i in 0..9)`)
+- **for** loops: `for (i in 0..9)` (inclusive), `for (i in 0 until 10)`
+  (exclusive), `for (i in 10 downTo 1)` (descending)
 - **while** and **do-while** loops
 - **break**, **continue**, and **return** (including early return and
   guard clauses: `if (n <= 1) return n`)
@@ -188,6 +190,34 @@ fun classify(n: Int): String = when {
     n in 1..10 -> "small"
     else -> "large"
 }
+```
+
+### Mutable class fields
+
+Class `var` fields can be mutated in methods, and changes persist:
+
+```kotlin
+class Counter {
+    var count: Int = 0
+    fun increment() { count++ }
+}
+
+fun main() {
+    val c = Counter()
+    c.increment()
+    c.increment()
+    c.increment()
+    println(c.count)  // 3
+}
+```
+
+You can also override `toString()`:
+
+```kotlin
+class Point(val x: Int, val y: Int) {
+    override fun toString(): String = "($x, $y)"
+}
+println(Point(3, 4))  // (3, 4)
 ```
 
 ### String templates
