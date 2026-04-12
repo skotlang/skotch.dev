@@ -25,7 +25,7 @@ export default defineConfig({
       title: 'skotch',
       favicon: '/favicon.svg',
       logo: {
-        src: './src/assets/skotch-icon.svg',
+        src: '/public/favicon.svg',
       },
       defaultLocale: 'root',
       locales: {

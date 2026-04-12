@@ -10,6 +10,7 @@ import { Aside } from '@astrojs/starlight/components';
 | Type | Description | Literal examples |
 |------|-------------|------------------|
 | `Int` | 32-bit signed integer | `42`, `0xFF`, `0b1010`, `1_000` |
+| `Long` | 64-bit signed integer | `100L`, `0xFFL`, `9999999999L` |
 | `Double` | 64-bit floating-point | `3.14`, `2.5e10`, `1.0f`, `-0.5` |
 | `String` | UTF-8 string | `"hello"`, `"""raw"""`, `"$x"` |
 | `Boolean` | True or false | `true`, `false` |
@@ -79,7 +80,7 @@ not yet compiled.
 | Type checks (`is`/`!is`) | Parsed; always evaluates to `true` (no runtime type info yet) |
 | Type casts (`as`/`as?`) | Parsed; passthrough (no `checkcast` emitted yet) |
 | Generics (`T`, `List<Int>`) | Type parameters, bounds, and variance not implemented |
-| `Long` | Literal suffix `L` recognized; dedicated `Long` arithmetic not yet wired |
+| Long comparisons | `<`, `>`, `<=`, `>=` on Long operands (need `lcmp` opcode) |
 | `Nothing` | Not implemented |
 | Smart casts | Flow-sensitive type narrowing after `is` checks |
 | Type aliases | `typealias` not yet compiled |

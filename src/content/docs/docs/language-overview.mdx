@@ -9,8 +9,8 @@ Skotch implements a growing subset of the Kotlin language. This page
 summarizes what works today and what is coming next.
 
 <Aside type="note">
-Estimated coverage: roughly 40% of the Kotlin language specification.
-190+ test fixtures are validated across JVM, DEX, LLVM IR, klib, and
+Estimated coverage: roughly 45% of the Kotlin language specification.
+220+ test fixtures are validated across JVM, DEX, LLVM IR, klib, and
 native targets.
 </Aside>
 
@@ -55,12 +55,12 @@ val typed: Int = 42
 | `Any` | Yes | Top type |
 | `Double` | Yes | `3.14`, `2.5e10`, `1.0f` — full arithmetic, `println(Double)` |
 | `null` | Yes | `null` literal, `println(null)` |
-| `Long` | Parsed | Lexer recognizes `L` suffix; semantics not yet wired |
-| `T?` (nullable) | Parsed | `?` syntax, `?.`, `?:`, `!!` operators parsed; JVM codegen in progress |
+| `Long` | Yes | `100L`, `0xFFL` — full 64-bit arithmetic, negation, values beyond Int range |
+| `T?` (nullable) | Partial | `?:` elvis works; `?.` and `!!` parsed but not yet compiled |
 
 ### Operators
 
-Arithmetic (`+`, `-`, `*`, `/`, `%`) on both `Int` and `Double`,
+Arithmetic (`+`, `-`, `*`, `/`, `%`) on `Int`, `Long`, and `Double`,
 comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`), logical (`&&`, `||`),
 unary (`-`, `!`), and compound assignment (`+=`, `-=`, `*=`, `/=`, `%=`).
 
@@ -116,6 +116,40 @@ and raw strings.
 val x = 42
 println("The answer is $x")
 println("Double: ${x * 2}")
+```
+
+### String methods
+
+String instance methods are compiled to JVM `invokevirtual` calls:
+
+```kotlin
+val s = "Hello, World!"
+println(s.length)                  // 13
+println(s.uppercase())             // HELLO, WORLD!
+println(s.lowercase())             // hello, world!
+println(s.isEmpty())               // false
+println(s.trim())                  // Hello, World!
+println(s.substring(7))            // World!
+println(s.substring(0, 5))         // Hello
+println(s.contains("World"))       // true
+println(s.startsWith("Hello"))     // true
+println(s.endsWith("!"))           // true
+println(s.indexOf("World"))        // 7
+println(s.replace("World", "Kotlin")) // Hello, Kotlin!
+println(42.toString())             // 42
+```
+
+### Init blocks
+
+Class `init` blocks execute during construction:
+
+```kotlin
+class Logger(val tag: String) {
+    init {
+        println("Logger initialized: $tag")
+    }
+    fun log(msg: String) { println("[$tag] $msg") }
+}
 ```
 
 ### Built-in functions
