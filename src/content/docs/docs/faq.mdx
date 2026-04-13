@@ -14,14 +14,19 @@ single CLI binary.
 
 ## How much of Kotlin does Skotch support?
 
-Roughly 15-20% of the Kotlin language specification. The core procedural
-subset works: functions (including extension and local functions),
-variables, all basic types, arithmetic, string templates, and all
-control-flow constructs (if/else, when, for, while, break/continue/return).
+Roughly 55% of the Kotlin language specification, validated by 330+
+test fixtures. Supported features include functions with default
+parameters and named arguments, classes with constructors, methods,
+mutable fields, and init blocks, data classes with `toString()`,
+object declarations, enum classes, companion objects, all control flow
+(`if`, `when`, `for`, `while`, `try/finally`), nullable types with
+the elvis operator, `Int`/`Long`/`Double`/`String`/`Char`/`Boolean`
+types, 20+ String methods, and Java interop via real `.class` file
+parsing from JDK jmods.
 
-Classes, generics, lambdas, nullable type operators, and the standard
-library collection APIs are not yet supported. See
-[Language Overview](/docs/language-overview/) for the complete list.
+Generics, lambdas, inheritance, interfaces, coroutines, and the
+standard library collection APIs are not yet supported. See
+[Language Overview](/docs/language-overview/) for the full list.
 
 ## Does Skotch need Gradle, kotlinc, or the JDK?
 
@@ -29,7 +34,8 @@ library collection APIs are not yet supported. See
   directly and compiles Kotlin source itself.
 - **JDK**: Needed only to *run* compiled `.class` files and for the
   REPL's embedded JVM. Not needed for compilation to DEX, LLVM IR, klib,
-  or native targets.
+  or native targets. Also used for Java interop (reading `.class` files
+  from JDK jmods for method resolution).
 - **Android SDK**: Not needed. Skotch generates DEX bytecode and binary
   AndroidManifest.xml without `d8`, `dx`, or `aapt2`.
 - **clang**: Needed only for the `native` target's link step.
@@ -37,24 +43,41 @@ library collection APIs are not yet supported. See
 ## Can I use Skotch for Android development?
 
 Skotch can produce unsigned APKs with DEX bytecode and a generated
-AndroidManifest.xml. However, it does not yet support classes, Android
-resource processing, or the Kotlin standard library — so it cannot build
-typical Android apps yet. It is suitable for Android tooling experiments
-and simple programs.
+AndroidManifest.xml. It reads your `android { }` block from
+`build.gradle.kts` for namespace, SDK versions, and signing config.
+However, Android resource processing, the Android SDK APIs, and
+Activity/Fragment classes are not yet supported, so typical Android
+apps cannot be built yet.
 
 ## Can I use existing Kotlin/Java libraries?
 
-Not yet. Skotch does not resolve or download Maven/Gradle dependencies.
-Inter-module `project()` dependencies within a multi-module project are
-supported, but external libraries are not.
+Skotch can parse real `.class` files from the JDK (via jmods) and
+resolve methods like `java.lang.Math.abs()` or `java.lang.String`
+methods. Import declarations like `import java.lang.Math` work, and
+`java.lang.*` is implicitly available.
+
+External Maven/Gradle dependencies are not yet resolved or downloaded.
+Inter-module `project()` dependencies within a multi-module project
+are supported.
+
+## Does Skotch have editor support?
+
+Yes. The `skotch lsp` subcommand starts a Language Server Protocol
+server on stdin/stdout. It provides real-time diagnostics, semantic
+token highlighting, hover info, go-to-definition, and completions.
+It works with any LSP-compatible editor (VS Code, Neovim, Helix,
+Zed, etc.).
 
 ## How does the REPL work?
 
 The REPL compiles each turn to a JVM class file and executes it via JNI
 in an embedded JVM within the same process. There is no JVM subprocess
-startup on each turn — the JVM is initialized once and reused.
-Declarations (`val`, `var`, `fun`) accumulate across turns so later
-expressions can reference earlier definitions.
+startup on each turn. The JVM is initialized once and reused.
+
+Top-level declarations (`fun`, `class`, `data class`) and local
+declarations (`val`, `var`) accumulate across turns so later
+expressions can reference earlier definitions. Multi-statement lines
+separated by `;` are split and processed individually.
 
 ## How does Skotch validate its output?
 
@@ -63,13 +86,22 @@ corresponding reference tool (`kotlinc`, `d8`, `kotlinc-native`). Both
 outputs are committed to git. CI diffs them using normalized text forms
 that strip cosmetic differences (constant pool ordering, debug
 attributes, target triples). This means CI does not need the JDK or
-Android SDK installed.
+Android SDK installed. There are currently 330+ validated fixtures.
 
 ## What platforms does Skotch run on?
 
 Skotch builds and runs on macOS (ARM and x86), Linux (x86_64 and
 aarch64), and Windows (x86_64). Pre-built binaries are published on
-the [Releases](https://github.com/skotlang/skotch/releases) page.
+the [Releases](https://github.com/skotlang/skot/releases) page.
+
+## What is the roadmap to 1.0?
+
+The goal for v1.0.0 is building every
+[Official Jetpack Compose Sample](https://github.com/android/compose-samples)
+using only `skotch build`, producing debug APKs that install and run on
+an Android emulator. The roadmap covers inheritance, lambdas, generics,
+collections, coroutines, dependency resolution, resource compilation,
+and the Compose compiler plugin. See the Roadmap section on the front page for milestone details.
 
 ## How do I report a bug?
 

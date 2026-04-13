@@ -33,28 +33,28 @@ import Roadmap from '../../components/Roadmap.astro';
 
 <div class="feature-grid">
 
-<FeatureCard title="Modern Syntax" icon="code" link="/docs/syntax/" color="green">
-  A clean, expressive language designed for readability and safety, with modern features like pattern matching and null safety.
+<FeatureCard title="Kotlin, All Five Targets" icon="code" link="/docs/compiler/" color="green">
+  Compile Kotlin to JVM class files, DEX, LLVM IR, native binaries, and klib archives from one toolchain. Classes, enums, data classes, and 50+ language features work across all targets.
 </FeatureCard>
 
-<FeatureCard title="JVM Native" icon="memory" link="/docs/compiler/" color="blue">
-  Compiles directly to JVM bytecode with no runtime overhead. Full interoperability with Java and Kotlin libraries.
+<FeatureCard title="No JVM Required to Build" icon="bolt" link="/docs/architecture/" color="blue">
+  Written in Rust with no dependency on kotlinc, javac, or Gradle. Compilation starts instantly with no daemon warm-up and no multi-GB SDK downloads.
 </FeatureCard>
 
-<FeatureCard title="Android Ready" icon="smartphone" link="/docs/guides/android-integration/" color="purple">
-  First-class Android support with seamless integration into existing Android projects and build systems.
+<FeatureCard title="Android APKs, Built In" icon="smartphone" link="/docs/guides/android-integration/" color="purple">
+  Produces DEX bytecode and unsigned APKs directly. Reads your build.gradle.kts for namespace, SDK versions, and signing config without needing the Android SDK or aapt2.
 </FeatureCard>
 
-<FeatureCard title="Fast Compilation" icon="bolt" link="/docs/architecture/" color="amber">
-  Incremental compilation and efficient code generation keep your development cycle fast.
+<FeatureCard title="Editor Integration" icon="verified" link="/docs/cli/" color="amber">
+  Ships with a built-in LSP server for real-time diagnostics, completions, hover info, and go-to-definition in VS Code, Neovim, and other editors.
 </FeatureCard>
 
-<FeatureCard title="Type Safe" icon="verified" link="/docs/types/" color="teal">
-  Strong static typing with type inference catches errors at compile time while keeping code concise.
+<FeatureCard title="Interactive REPL" icon="memory" link="/docs/cli/#skotch-repl" color="teal">
+  Try Kotlin interactively with an in-process JVM. Declarations accumulate across turns, so you can build up and test code incrementally.
 </FeatureCard>
 
 <FeatureCard title="Open Source" icon="public" link="/docs/faq/" color="red">
-  Skotch is free and open source. Contribute, report issues, and shape the future of the tool.
+  Apache-2.0 licensed. Every compiled output is validated against kotlinc and d8 reference tools with 330+ test fixtures committed to the repo.
 </FeatureCard>
 
 </div>
