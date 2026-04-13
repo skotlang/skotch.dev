@@ -1,0 +1,232 @@
+---
+// "Four tools, one toolkit" section showing what Skotch replaces.
+---
+
+<div class="not-content replaces-section">
+  <h2 class="replaces-heading">One Toolchain to Rule Them All</h2>
+  <p class="replaces-subtext">Skotch will replace four separate collections of build tools with a single binary.</p>
+
+  <div class="replaces-grid">
+
+    <div class="replaces-card">
+      <div class="replaces-card-top">
+        <h3 class="replaces-card-title">Kotlin Compiler</h3>
+        <span class="replaces-badge badge-kotlinc">replaces kotlinc</span>
+      </div>
+      <ul class="replaces-list">
+        <li>Lexer, parser, type checker, and MIR all written in Rust</li>
+        <li>No JVM startup cost on every compilation</li>
+        <li>Five output targets: JVM, DEX, LLVM IR, klib, native</li>
+        <li>330+ test fixtures validated against kotlinc output</li>
+        <li>Built-in LSP server for editor integration</li>
+      </ul>
+    </div>
+
+    <div class="replaces-card">
+      <div class="replaces-card-top">
+        <h3 class="replaces-card-title">Gradle Build</h3>
+        <span class="replaces-badge badge-gradle">replaces gradle</span>
+      </div>
+      <ul class="replaces-list">
+        <li>Reads <code>build.gradle.kts</code> and <code>settings.gradle.kts</code> directly</li>
+        <li>Multi-module project support with dependency ordering</li>
+        <li>JVM target: compiles and packages as executable JAR</li>
+        <li>Android target: compiles, generates manifest, produces APK</li>
+        <li>No daemon process or multi-gigabyte cache</li>
+      </ul>
+    </div>
+
+    <div class="replaces-card">
+      <div class="replaces-card-top">
+        <h3 class="replaces-card-title">Dependency Management</h3>
+        <span class="replaces-badge badge-maven">replaces maven</span>
+      </div>
+      <ul class="replaces-list">
+        <li>Resolves <code>project(":lib")</code> inter-module dependencies</li>
+        <li>Parses JDK class files from jmods for Java interop</li>
+        <li>Reads <code>kotlin-stdlib.jar</code> for stdlib resolution</li>
+        <li>Automatic topological sort of module compilation order</li>
+        <li>Maven repository resolution on the roadmap for v0.7</li>
+      </ul>
+    </div>
+
+    <div class="replaces-card">
+      <div class="replaces-card-top">
+        <h3 class="replaces-card-title">Android Packaging</h3>
+        <span class="replaces-badge badge-aapt">replaces aapt2</span>
+      </div>
+      <ul class="replaces-list">
+        <li>Generates binary <code>AndroidManifest.xml</code> from build config</li>
+        <li>DEX bytecode emitted directly, no <code>d8</code> or <code>r8</code> needed</li>
+        <li>APK assembly with correct ZIP alignment</li>
+        <li>APK Signature Scheme v2 signing with PEM keys</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<style>
+  .replaces-section {
+    margin-top: 3rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .replaces-heading {
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--sl-color-white);
+    margin: 0 0 0.25rem;
+  }
+
+  .replaces-subtext {
+    text-align: center;
+    font-size: 0.9375rem;
+    color: var(--sl-color-gray-2);
+    margin: 0 0 1.75rem;
+  }
+
+  :root[data-theme='light'] .replaces-subtext {
+    color: var(--sl-color-gray-3);
+  }
+
+  /* ── Grid ── */
+
+  .replaces-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 640px) {
+    .replaces-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ── Card ── */
+
+  .replaces-card {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.875rem;
+    padding: 1.25rem 1.25rem 1rem;
+    background: var(--sl-color-gray-6);
+    position: relative;
+  }
+
+  :root[data-theme='light'] .replaces-card {
+    background: var(--sl-color-gray-7, var(--sl-color-gray-6));
+  }
+
+  .replaces-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .replaces-card-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--sl-color-white);
+  }
+
+  /* ── Badge ── */
+
+  .replaces-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--sl-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.3rem;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+
+  .badge-kotlinc {
+    background: hsla(265, 50%, 50%, 0.2);
+    color: hsl(265, 60%, 70%);
+    border: 1px solid hsla(265, 50%, 50%, 0.3);
+  }
+
+  .badge-gradle {
+    background: hsla(160, 50%, 35%, 0.2);
+    color: hsl(160, 55%, 60%);
+    border: 1px solid hsla(160, 50%, 35%, 0.3);
+  }
+
+  .badge-maven {
+    background: hsla(210, 50%, 45%, 0.2);
+    color: hsl(210, 55%, 65%);
+    border: 1px solid hsla(210, 50%, 45%, 0.3);
+  }
+
+  .badge-aapt {
+    background: hsla(30, 55%, 45%, 0.2);
+    color: hsl(30, 60%, 65%);
+    border: 1px solid hsla(30, 55%, 45%, 0.3);
+  }
+
+  :root[data-theme='light'] .badge-kotlinc {
+    background: hsla(265, 55%, 55%, 0.12);
+    color: hsl(265, 50%, 45%);
+    border-color: hsla(265, 50%, 55%, 0.25);
+  }
+
+  :root[data-theme='light'] .badge-gradle {
+    background: hsla(160, 55%, 35%, 0.12);
+    color: hsl(160, 45%, 32%);
+    border-color: hsla(160, 50%, 35%, 0.25);
+  }
+
+  :root[data-theme='light'] .badge-maven {
+    background: hsla(210, 55%, 45%, 0.12);
+    color: hsl(210, 45%, 38%);
+    border-color: hsla(210, 50%, 45%, 0.25);
+  }
+
+  :root[data-theme='light'] .badge-aapt {
+    background: hsla(30, 60%, 45%, 0.12);
+    color: hsl(30, 50%, 35%);
+    border-color: hsla(30, 55%, 45%, 0.25);
+  }
+
+  /* ── List ── */
+
+  .replaces-list {
+    margin: 0;
+    padding: 0 0 0 1.125rem;
+    list-style: disc;
+  }
+
+  .replaces-list li {
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: var(--sl-color-gray-2);
+    margin: 0.25rem 0;
+  }
+
+  :root[data-theme='light'] .replaces-list li {
+    color: var(--sl-color-gray-3);
+  }
+
+  .replaces-list code {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.2rem;
+    background: var(--sl-color-gray-5);
+    color: var(--sl-color-gray-1);
+  }
+
+  :root[data-theme='light'] .replaces-list code {
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-gray-2);
+  }
+</style>

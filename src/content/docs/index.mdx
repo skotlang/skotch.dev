@@ -15,14 +15,18 @@ hero:
       link: /docs/getting-started/
       icon: right-arrow
       variant: primary
-    - text: Language Overview
+    - text: Overview
       link: /docs/language-overview/
       icon: right-arrow
       variant: secondary
+
+# Feature grid disabled for now
+# <FeatureGrid />
 ---
 
-import FeatureCard from '../../components/FeatureCard.astro';
 import InstallPicker from '../../components/InstallPicker.astro';
+import ReplacesGrid from '../../components/ReplacesGrid.astro';
+import FeatureGrid from '../../components/FeatureGrid.astro';
 import Roadmap from '../../components/Roadmap.astro';
 
 <div class="hero-icon">
@@ -31,32 +35,6 @@ import Roadmap from '../../components/Roadmap.astro';
 
 <InstallPicker />
 
-<div class="feature-grid">
-
-<FeatureCard title="Kotlin, All Five Targets" icon="code" link="/docs/compiler/" color="green">
-  Compile Kotlin to JVM class files, DEX, LLVM IR, native binaries, and klib archives from one toolchain. Classes, enums, data classes, and 50+ language features work across all targets.
-</FeatureCard>
-
-<FeatureCard title="No JVM Required to Build" icon="bolt" link="/docs/architecture/" color="blue">
-  Written in Rust with no dependency on kotlinc, javac, or Gradle. Compilation starts instantly with no daemon warm-up and no multi-GB SDK downloads.
-</FeatureCard>
-
-<FeatureCard title="Android APKs, Built In" icon="smartphone" link="/docs/guides/android-integration/" color="purple">
-  Produces DEX bytecode and unsigned APKs directly. Reads your build.gradle.kts for namespace, SDK versions, and signing config without needing the Android SDK or aapt2.
-</FeatureCard>
-
-<FeatureCard title="Editor Integration" icon="verified" link="/docs/cli/" color="amber">
-  Ships with a built-in LSP server for real-time diagnostics, completions, hover info, and go-to-definition in VS Code, Neovim, and other editors.
-</FeatureCard>
-
-<FeatureCard title="Interactive REPL" icon="memory" link="/docs/cli/#skotch-repl" color="teal">
-  Try Kotlin interactively with an in-process JVM. Declarations accumulate across turns, so you can build up and test code incrementally.
-</FeatureCard>
-
-<FeatureCard title="Open Source" icon="public" link="/docs/faq/" color="red">
-  Apache-2.0 licensed. Every compiled output is validated against kotlinc and d8 reference tools with 330+ test fixtures committed to the repo.
-</FeatureCard>
-
-</div>
+<ReplacesGrid />
 
 <Roadmap />
