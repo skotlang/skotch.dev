@@ -28,6 +28,8 @@ native targets.
 | [Class declarations](https://kotlinlang.org/spec/declarations.html#class-declaration) | §4.5 | Primary constructor, field access, instance methods, `init` blocks, mutable `var` field writeback, `override fun toString()` |
 | [Increment/decrement](https://kotlinlang.org/spec/expressions.html#postfix-increment-expression) | §7.3.4 | `x++`, `x--` postfix operators on locals and class fields |
 | [Object declarations](https://kotlinlang.org/spec/declarations.html#object-declaration) | §4.5.4 | `object Singleton { fun greet() {} }` — singleton methods via `Singleton.method()` |
+| [Enum classes](https://kotlinlang.org/spec/declarations.html#enum-class-declaration) | §4.5.7 | `enum class Color { RED, GREEN, BLUE }` — entries via `Color.RED`, works in `when` |
+| [Companion objects](https://kotlinlang.org/spec/declarations.html#companion-object-declaration) | §4.5.4 | `companion object { fun create() }` — static methods via `ClassName.method()` |
 | [Const val](https://kotlinlang.org/spec/declarations.html#property-declaration) | §4.2 | `const val` compile-time constants inlined at call site |
 | [Visibility modifiers](https://kotlinlang.org/spec/declarations.html#declaration-modifiers) | §4.3 | `private`, `internal`, `protected`, `open`, `abstract` — parsed and accepted (not yet enforced) |
 | [Java interop](https://kotlinlang.org/spec/platform-specific-parts.html) | §18 | Real `.class` parsing from JDK jmods + CLASSPATH; deferred resolution; clear classpath errors |
@@ -232,6 +234,33 @@ object MathUtils {
 fun main() {
     println(MathUtils.square(5))  // 25
     println(MathUtils.cube(3))    // 27
+}
+```
+
+### Enum classes
+
+```kotlin
+enum class Color { RED, GREEN, BLUE }
+
+fun main() {
+    println(Color.RED)    // RED
+    println(Color.BLUE)   // BLUE
+}
+```
+
+### Companion objects
+
+```kotlin
+class Config {
+    companion object {
+        fun appName(): String = "MyApp"
+        fun version(): Int = 1
+    }
+}
+
+fun main() {
+    println(Config.appName())  // MyApp
+    println(Config.version())  // 1
 }
 ```
 
