@@ -1,0 +1,77 @@
+---
+// Client-side mermaid diagram renderer.
+// Usage: <Mermaid chart={`graph LR; A-->B`} />
+interface Props {
+  chart: string;
+}
+const { chart } = Astro.props;
+const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<div class="mermaid-wrapper">
+  <pre class="mermaid" id={id} set:text={chart} />
+</div>
+
+<script>
+  async function initMermaid() {
+    if (typeof window === 'undefined') return;
+    // @ts-ignore
+    if (!window.mermaid) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js';
+      script.onload = () => {
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        // @ts-ignore
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: isDark ? 'dark' : 'default',
+          themeVariables: isDark ? {
+            primaryColor: '#2d5016',
+            primaryTextColor: '#eef2e7',
+            primaryBorderColor: '#4a5c3e',
+            lineColor: '#7b8f6e',
+            secondaryColor: '#1a2a14',
+            tertiaryColor: '#2b3b22',
+            background: '#111c0d',
+            mainBkg: '#1a2a14',
+            nodeBorder: '#4a5c3e',
+            clusterBkg: '#1a2a14',
+            titleColor: '#eef2e7',
+            edgeLabelBackground: '#1a2a14',
+          } : {},
+        });
+        renderAll();
+      };
+      document.head.appendChild(script);
+    } else {
+      renderAll();
+    }
+  }
+
+  function renderAll() {
+    // @ts-ignore
+    window.mermaid.run({ querySelector: '.mermaid' });
+  }
+
+  initMermaid();
+  document.addEventListener('astro:page-load', initMermaid);
+</script>
+
+<style>
+  .mermaid-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+
+  .mermaid {
+    background: transparent !important;
+    font-family: var(--sl-font, system-ui, sans-serif) !important;
+  }
+
+  /* Hide the raw text before mermaid renders */
+  .mermaid[data-processed="true"] {
+    visibility: visible;
+  }
+</style>

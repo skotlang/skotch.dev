@@ -6,6 +6,7 @@ import starlightBlog from 'starlight-blog'
 import rehypeExternalLinks from "rehype-external-links";
 import { remarkHeadingId } from "remark-custom-heading-id";
 
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://skotch.dev',

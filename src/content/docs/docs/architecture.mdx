@@ -4,95 +4,438 @@ description: Internal architecture of the Skotch compiler.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import Mermaid from '../../../components/Mermaid.astro';
 
-## Workspace layout
+Skotch is a Kotlin compiler and build system implemented as a Cargo
+workspace of 34 Rust crates. This page describes how those crates fit
+together, how a `.kt` file becomes executable output, and the design
+decisions behind each layer.
 
-Skotch is organized as a Cargo workspace of ~25 crates arranged in a
-strict dependency DAG. Lower layers know nothing about higher ones.
+## Compilation pipeline
 
-```
-Layer 0 — primitives:    span, intern, config, diagnostics
-Layer 1 — front-end:     syntax, lexer, parser
-Layer 2 — semantic:      resolve, types, typeck
-Layer 3 — IRs:           hir, mir, mir-lower
-Layer 4 — backends:      backend-jvm, backend-dex, backend-llvm,
-                         backend-klib, backend-wasm
-Layer 5 — normalizers:   classfile-norm, dex-norm, llvm-norm
-Layer 6 — orchestration: driver, buildscript, build
-Layer 7 — packaging:     jar, apk, axml, sign
-Layer 8 — runtime:       jvm (embedded JNI), repl
-Layer 9 — CLI:           cli (the `skotch` binary)
-```
+Every Kotlin source file passes through the same front-end stages
+before being dispatched to a target-specific backend. The pipeline
+looks like this:
+
+<Mermaid chart={`
+flowchart LR
+    SRC[".kt source"] --> LEX["Lexer"]
+    LEX --> PAR["Parser"]
+    PAR --> RES["Resolver"]
+    RES --> TYP["Type Checker"]
+    TYP --> MIR["MIR Lowering"]
+    MIR --> BE{"Backend"}
+    BE --> JVM[".class"]
+    BE --> DEX[".dex"]
+    BE --> LLVM[".ll"]
+    BE --> KLIB[".klib"]
+    BE --> NATIVE["binary"]
+    style SRC fill:#2d5016,color:#eef2e7,stroke:#4a5c3e
+    style BE fill:#1a2a14,color:#eef2e7,stroke:#4a5c3e
+    style JVM fill:#172554,color:#dbeafe,stroke:#3b82f6
+    style DEX fill:#172554,color:#dbeafe,stroke:#3b82f6
+    style LLVM fill:#172554,color:#dbeafe,stroke:#3b82f6
+    style KLIB fill:#172554,color:#dbeafe,stroke:#3b82f6
+    style NATIVE fill:#172554,color:#dbeafe,stroke:#3b82f6
+`} />
+
+The stages are:
+
+1. **Lexer** (`skotch-lexer`). A hand-rolled lexer that emits tokens
+   including string template sequences (`StringStart`, `StringChunk`,
+   `StringIdentRef`, `StringExprStart`/`End`, `StringEnd`). This
+   representation lets the parser handle `"$x"` and `"${x + 1}"`
+   without losing structural information.
+
+2. **Parser** (`skotch-parser`). A recursive-descent parser that
+   produces an untyped AST. It handles operator precedence (seven
+   levels from logical OR down to postfix), control flow (`if`/`when`/
+   `for`/`while`/`try`), class declarations, data classes, enum
+   classes, object declarations, and all expression forms.
+
+3. **Resolver** (`skotch-resolve`). Binds identifier references to
+   declarations. Handles forward references between top-level
+   functions (enabling mutual recursion) and local scope shadowing.
+
+4. **Type Checker** (`skotch-typeck`). A two-pass system: pass one
+   collects all top-level function and class signatures, pass two
+   checks function bodies against those signatures. Supports type
+   inference from literal initializers, method dispatch on classes,
+   extension function receivers, and nullable type tracking.
+
+5. **MIR Lowering** (`skotch-mir-lower`). Lowers the typed AST into
+   MIR (Mid-level Intermediate Representation), a three-address-code
+   form with SSA-like virtual locals. MIR is the "waist" of the
+   compiler: all five backends consume the same MIR representation.
+
+6. **Backend**. Each target has its own crate that converts MIR into
+   the output format. Adding a new target means writing one new
+   backend crate.
+
+## Backend details
+
+<Mermaid chart={`
+flowchart TD
+    MIR["MIR Module"]
+    MIR --> JVM["backend-jvm<br/>.class (Java 17, v61)"]
+    MIR --> DEX["backend-dex<br/>.dex (Dalvik v035)"]
+    MIR --> KLIB["backend-klib<br/>.klib (ZIP + JSON IR)"]
+    KLIB --> LLVM["backend-llvm<br/>.ll (textual LLVM 19+)"]
+    LLVM --> CLANG["clang<br/>native binary"]
+    style MIR fill:#2d5016,color:#eef2e7,stroke:#4a5c3e
+    style CLANG fill:#451a03,color:#fef3c7,stroke:#92400e
+`} />
+
+### JVM backend
+
+Produces Java 17 class files (major version 61). Top-level Kotlin
+functions become `static` methods on a wrapper class named after the
+source file (`hello.kt` becomes `HelloKt`). The constant pool,
+bytecode, and class file structure are written directly using the
+`byteorder` crate. There is no dependency on `javac` or ASM.
+
+Instance methods use `invokevirtual` dispatch. Data class `toString()`
+methods are synthesized to produce Kotlin-style output like
+`Point(x=1, y=2)`. Object declarations and companion objects
+compile to classes with static methods.
+
+### DEX backend
+
+Produces Dalvik Executable format (v035). DEX is an index-heavy
+format where strings, types, methods, and fields are all referenced
+by sorted index tables. The backend uses a two-pass approach: collect
+all symbols and sort them first, then write bytecode with resolved
+indices. Written from scratch with no dependency on `d8` or `dx`.
+
+### klib backend
+
+Produces a `.klib` ZIP archive containing the MIR module serialized
+as JSON, a manifest with compiler metadata, and copies of the original
+source files. This is the intermediate format used by the LLVM IR and
+native pipelines.
+
+<Aside type="note">
+Skotch klibs use a JSON-based IR format and are not interchangeable
+with klibs produced by `kotlinc-native`. The archive structure is
+similar but the IR representation is different.
+</Aside>
+
+### LLVM IR backend
+
+Produces textual LLVM IR (version 19+) via plain string formatting.
+There is no `inkwell` or `llvm-sys` dependency, which avoids the
+`libLLVM` system requirement and the build-time cost of linking it.
+The runtime is libc only: `println(String)` maps to `puts`,
+`println(Int)` maps to `printf("%d\n")`.
+
+### Native backend
+
+Chains the LLVM IR backend with a `clang` link step to produce a
+host executable. `clang` is the only external tool that `skotch` ever
+invokes.
+
+## Build orchestration
+
+When you run `skotch build` on a project, the build orchestrator
+handles source discovery, Gradle file parsing, multi-module ordering,
+compilation, and packaging.
+
+<Mermaid chart={`
+flowchart TD
+    BUILD["skotch build"]
+    BUILD --> DISC["Discover sources<br/>src/main/kotlin/**/*.kt"]
+    BUILD --> GRADLE["Parse build.gradle.kts<br/>+ settings.gradle.kts"]
+    GRADLE --> MODEL["ProjectModel<br/>target, group, SDK versions"]
+    DISC --> COMPILE["Compile each .kt file<br/>to MIR module"]
+    COMPILE --> MERGE["Merge MIR modules<br/>remap string IDs"]
+    MERGE --> DISPATCH{"Target?"}
+    DISPATCH -->|JVM| JAR["backend-jvm → .class files<br/>→ skotch-jar → .jar"]
+    DISPATCH -->|Android| APK["backend-dex → .dex<br/>→ skotch-axml → manifest<br/>→ skotch-apk → .apk"]
+    style BUILD fill:#2d5016,color:#eef2e7,stroke:#4a5c3e
+    style DISPATCH fill:#1a2a14,color:#eef2e7,stroke:#4a5c3e
+`} />
+
+### Gradle file parsing
+
+The `skotch-buildscript` crate is a token-walker parser (not a full
+Gradle DSL evaluator) that pattern-matches known blocks from
+`build.gradle.kts`. It extracts:
+
+- **plugins block**: determines the build target (JVM vs Android)
+- **group/version**: project metadata
+- **application block**: `mainClass` for JAR packaging
+- **android block**: namespace, compileSdk, minSdk, targetSdk,
+  versionCode, versionName, signing config
+- **dependencies block**: `project(":lib")` inter-module references
+- **settings.gradle.kts**: `include()` for multi-module discovery
+
+Unrecognized blocks (`repositories`, `tasks`, `sourceSets`, etc.)
+are silently skipped. This lets Skotch read real-world Gradle files
+without failing on syntax it doesn't need.
+
+### Multi-module builds
+
+For projects with a `settings.gradle.kts`, Skotch discovers all
+included modules, parses each module's `build.gradle.kts`, performs
+a topological sort by dependency depth, and compiles modules in
+order. All class files are merged into a single JAR.
+
+### Packaging
+
+| Crate | Output | Details |
+|-------|--------|---------|
+| `skotch-jar` | `.jar` | ZIP with `META-INF/MANIFEST.MF` and `Main-Class` header |
+| `skotch-apk` | `.apk` | ZIP with 4-byte alignment, signing block insertion |
+| `skotch-axml` | binary XML | `AndroidManifest.xml` generated from build config |
+| `skotch-sign` | signing block | APK Signature Scheme v2 (RSA-PKCS1-v1.5 + SHA-256) |
+
+## Workspace layers
+
+The 34 crates form a strict dependency DAG. Each crate depends only
+on crates in the same or lower layer. No crate knows about anything
+above it.
+
+<Mermaid chart={`
+block-beta
+  columns 4
+  block:L0:4
+    columns 4
+    span intern config diagnostics
+  end
+  block:L1:4
+    columns 3
+    syntax lexer parser
+  end
+  block:L2:4
+    columns 4
+    resolve types typeck classinfo
+  end
+  block:L3:4
+    columns 3
+    hir mir mir_lower["mir-lower"]
+  end
+  block:L4:4
+    columns 5
+    jvm_be["backend-jvm"] dex_be["backend-dex"] llvm_be["backend-llvm"] klib_be["backend-klib"] wasm_be["backend-wasm"]
+  end
+  block:L5:4
+    columns 3
+    cn["classfile-norm"] dn["dex-norm"] ln["llvm-norm"]
+  end
+  block:L6:4
+    columns 4
+    driver buildscript build lsp
+  end
+  block:L7:4
+    columns 4
+    jar apk axml sign
+  end
+  block:L8:4
+    columns 3
+    jvm_rt["jvm (JNI)"] repl tape
+  end
+  block:L9:4
+    columns 1
+    cli
+  end
+
+  style L0 fill:#2d5016,color:#eef2e7,stroke:#4a5c3e
+  style L1 fill:#1a3600,color:#eef2e7,stroke:#4a5c3e
+  style L2 fill:#1a2a14,color:#eef2e7,stroke:#4a5c3e
+  style L3 fill:#172554,color:#dbeafe,stroke:#3b82f6
+  style L4 fill:#1e1b4b,color:#e0e7ff,stroke:#6366f1
+  style L5 fill:#27272a,color:#e4e4e7,stroke:#52525b
+  style L6 fill:#451a03,color:#fef3c7,stroke:#92400e
+  style L7 fill:#3b0764,color:#f3e8ff,stroke:#9333ea
+  style L8 fill:#042f2e,color:#ccfbf1,stroke:#14b8a6
+  style L9 fill:#450a0a,color:#fee2e2,stroke:#ef4444
+`} />
+
+### Layer 0: Primitives
+
+Foundational types shared across the entire compiler.
+
+- **`skotch-span`**: Source locations (file, line, column) for error
+  reporting.
+- **`skotch-intern`**: String interning. All identifiers and symbols
+  are interned into a global table for deduplication and fast
+  comparison.
+- **`skotch-config`**: Compile-time constants (default Android SDK
+  versions, file naming conventions).
+- **`skotch-diagnostics`**: Error and warning reporting infrastructure.
+
+### Layer 1: Front-end
+
+- **`skotch-syntax`**: AST node definitions. The untyped syntax tree
+  that the parser produces.
+- **`skotch-lexer`**: Hand-rolled tokenizer (~250 lines). Handles
+  Kotlin's string template syntax by switching between regular and
+  interpolation modes.
+- **`skotch-parser`**: Recursive-descent parser (~1,200 lines).
+  Produces the untyped AST. Handles full operator precedence, all
+  declaration forms, and control flow.
+
+### Layer 2: Semantic analysis
+
+- **`skotch-resolve`**: Name resolution. Binds identifiers to their
+  declarations, handles forward references and scoping.
+- **`skotch-types`**: Type definitions (`Ty` enum: `Int`, `Long`,
+  `Double`, `String`, `Boolean`, `Char`, `Unit`, `Any`, `Nullable`,
+  `Error`, class types).
+- **`skotch-typeck`**: Two-pass type checker. Pass one collects
+  signatures; pass two checks bodies.
+- **`skotch-classinfo`**: Reads `.class` files from JDK jmods and
+  CLASSPATH JARs to resolve Java method signatures for interop.
+
+### Layer 3: Intermediate representations
+
+- **`skotch-hir`**: High-level IR (transitional, being phased into
+  MIR).
+- **`skotch-mir`**: Mid-level IR data structures. Three-address-code
+  with virtual locals, SSA-like assignments, and typed operations.
+- **`skotch-mir-lower`**: Lowers typed AST to MIR. This is where
+  declaration forms are desugared and control flow is linearized
+  into basic blocks.
+
+### Layer 4: Backends
+
+Each backend reads MIR and emits target-specific output.
+
+- **`skotch-backend-jvm`**: Java 17 `.class` files.
+- **`skotch-backend-dex`**: Dalvik `.dex` files.
+- **`skotch-backend-llvm`**: Textual LLVM IR `.ll` files.
+- **`skotch-backend-klib`**: `.klib` archive (ZIP with JSON IR).
+- **`skotch-backend-wasm`**: WebAssembly (planned).
+
+### Layer 5: Normalizers
+
+Test-only crates that produce normalized text forms of compiler
+output. These strip cosmetic differences (constant pool ordering,
+debug attributes, kotlin metadata, target triples) so that Skotch's
+output can be diffed against `kotlinc` or `d8` without false
+positives.
+
+### Layer 6: Orchestration
+
+- **`skotch-driver`**: Wires the front-end to backends. Entry point
+  for `skotch emit`.
+- **`skotch-buildscript`**: Token-walker parser for Gradle build
+  files.
+- **`skotch-build`**: Project-level build orchestrator (source
+  discovery, multi-module support, packaging dispatch).
+- **`skotch-lsp`**: Language Server Protocol implementation. Provides
+  real-time diagnostics, semantic tokens, hover, go-to-definition,
+  and completions over stdin/stdout.
+
+### Layer 7: Packaging
+
+JAR, APK, binary XML, and signing. See the Packaging table above.
+
+### Layer 8: Runtime
+
+- **`skotch-jvm`**: Embedded JVM via JNI. Initializes a single
+  `JavaVM` instance per process and loads compiled classes via
+  `DefineClass`. Used by the REPL and script runner.
+- **`skotch-repl`**: Interactive REPL and `.kts` script runner.
+  Accumulates declarations across turns.
+- **`skotch-tape`**: Test recording and playback utilities.
+
+### Layer 9: CLI
+
+- **`skotch-cli`**: Binary entry point. Clap-based subcommand
+  dispatch for `emit`, `build`, `repl`, `run`, `lsp`, and `test`.
 
 ## Design principles
 
 ### Single binary, no external tools
 
-The shipping `skotch` binary never invokes `kotlinc`, `javac`, `d8`, or
-Gradle. The only external tool it calls is `clang`, for the native
-target's link step. Reference outputs used for testing are generated by
-a separate `xtask` binary (the only crate allowed to shell out to
+The shipping `skotch` binary never invokes `kotlinc`, `javac`, `d8`,
+or Gradle. The only external tool it calls is `clang`, for the native
+target's link step. Reference outputs used for testing are generated
+by a separate `xtask` binary (the only crate allowed to shell out to
 external compilers) and committed to git.
+
+### MIR as the waist
+
+All five backends consume the same MIR. This means the front-end,
+resolver, type checker, and MIR lowering are written once and shared
+across all targets. Adding a new target means writing one backend
+crate that lowers MIR to the new format.
 
 ### Hand-rolled bytecode writers
 
 JVM class files and DEX files are written directly using `byteorder`.
 Constant-pool forward references make higher-level serialization
-frameworks awkward for these formats, so the writers manage pool indices
-and backpatches manually.
+frameworks awkward for these formats, so the writers manage pool
+indices and backpatches manually.
 
 ### Textual LLVM IR
 
 The LLVM backend emits plain-text `.ll` files via string formatting.
 This avoids linking against `libLLVM` (which adds a system requirement
-and significant build time) at the cost of not being able to run LLVM
+and significant build time) at the cost of not running LLVM
 optimization passes in-process.
-
-### MIR as the waist
-
-All five backends consume the same MIR (Mid-level IR). Adding a new
-target means writing one backend crate that lowers MIR to the target
-format. The front-end, resolver, type checker, and MIR lowering are
-shared.
 
 ### Fixture-driven validation
 
 Test fixtures live under `tests/fixtures/inputs/`. Each fixture is
-compiled by Skotch and by the reference tool for that target. Both
-outputs are committed under `tests/fixtures/expected/` so CI can diff
-them without installing the JDK, Android SDK, or `kotlinc-native`.
-
-Normalizers (`classfile-norm`, `dex-norm`, `llvm-norm`) strip cosmetic
+compiled by Skotch and by the reference tool for that target (`kotlinc`,
+`d8`, `kotlinc-native`). Both outputs are committed under
+`tests/fixtures/expected/` so CI can diff them without installing the
+JDK, Android SDK, or `kotlinc-native`. Normalizers strip cosmetic
 differences before comparison.
+
+```
+tests/fixtures/expected/
+    jvm/<fixture>/
+        skotch.class           # Skotch output
+        skotch.norm.txt        # normalized text
+        kotlinc.class          # reference output
+        kotlinc.norm.txt
+        run.stdout             # expected program output
+    dex/<fixture>/
+        skotch.dex
+        d8.dex
+    klib/<fixture>/
+        skotch.klib
+        kotlinc-native.klib
+    llvm/<fixture>/
+        skotch.ll
+        skotch.norm.txt
+```
 
 ## Parallelism
 
-Skotch uses Rayon for nested work-stealing parallelism. In a project
-build, modules are compiled in parallel (respecting dependency order),
-files within a module are compiled in parallel, and within each file
-the MIR lowering of independent functions can be parallelized.
+Skotch uses Rayon for nested work-stealing parallelism:
 
-## Crate responsibilities
+- **Modules** are compiled in parallel (respecting dependency order)
+- **Files** within a module are compiled in parallel
+- **Functions** within a file can be MIR-lowered in parallel
 
-| Crate | Role |
-|-------|------|
-| `skotch-lexer` | Hand-rolled lexer; emits tokens including string template sequences |
-| `skotch-parser` | Recursive-descent parser; produces an untyped AST |
-| `skotch-resolve` | Name resolution; binds identifiers to declarations |
-| `skotch-typeck` | Two-pass type checker (signatures then bodies) |
-| `skotch-mir` | MIR data structures (three-address-code, SSA-like locals) |
-| `skotch-mir-lower` | Lowers typed AST to MIR |
-| `skotch-backend-jvm` | MIR → `.class` (Java 17) |
-| `skotch-backend-dex` | MIR → `.dex` (Dalvik v035) |
-| `skotch-backend-klib` | MIR → `.klib` (ZIP + JSON IR) |
-| `skotch-backend-llvm` | MIR → `.ll` (textual LLVM IR) |
-| `skotch-driver` | Wires front-end to backends; `emit` entry point |
-| `skotch-buildscript` | Token-walker parser for `build.gradle.kts` / `settings.gradle.kts` |
-| `skotch-build` | Project-level build orchestrator (source discovery, multi-module, packaging) |
-| `skotch-jar` | JAR writer (ZIP with `META-INF/MANIFEST.MF`) |
-| `skotch-apk` | APK assembler (ZIP with alignment, signing block insertion) |
-| `skotch-axml` | Android binary XML writer (for `AndroidManifest.xml`) |
-| `skotch-sign` | APK Signature Scheme v2 (RSA-PKCS1-v1.5 + SHA-256) |
-| `skotch-jvm` | Embedded JVM via JNI for the REPL and script runner |
-| `skotch-repl` | Interactive REPL and `.kts` script runner |
-| `skotch-cli` | Binary entry point; clap-based subcommand dispatch |
+This means a multi-module project with many source files will
+naturally saturate available CPU cores without any configuration.
+
+## Java interop pipeline
+
+The `skotch-classinfo` crate reads real `.class` files from JDK jmods
+(via `JAVA_HOME`) and from JARs on the CLASSPATH (including
+`kotlin-stdlib.jar`). Method signatures are parsed and cached so the
+type checker can resolve calls like `"hello".uppercase()` or
+`java.lang.Math.abs(-1)`.
+
+<Mermaid chart={`
+flowchart LR
+    JMOD["JDK jmods<br/>(java.base, etc.)"] --> CI["classinfo<br/>parser"]
+    STDLIB["kotlin-stdlib.jar"] --> CI
+    CP["CLASSPATH JARs"] --> CI
+    CI --> SIG["Method signatures<br/>+ field types"]
+    SIG --> TC["Type Checker"]
+    TC --> BE["Backend<br/>(invokevirtual,<br/>invokestatic)"]
+    style CI fill:#2d5016,color:#eef2e7,stroke:#4a5c3e
+    style TC fill:#1a2a14,color:#eef2e7,stroke:#4a5c3e
+`} />
+
+Import declarations like `import java.lang.Math` work, and
+`java.lang.*` is implicitly available. Resolution is deferred: if a
+method cannot be found in the interop index, a clear diagnostic is
+emitted listing the classpath that was searched.
