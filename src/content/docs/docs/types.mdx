@@ -74,13 +74,13 @@ The following type system features are recognized by the parser but
 not yet compiled.
 </Aside>
 
-| Feature | Notes |
-|---------|-------|
-| Nullable operators (`?.`, `?:`, `!!`) | Parsed and resolved; JVM codegen needs reference-type comparison |
-| Type checks (`is`/`!is`) | Parsed; always evaluates to `true` (no runtime type info yet) |
-| Type casts (`as`/`as?`) | Parsed; passthrough (no `checkcast` emitted yet) |
-| Generics (`T`, `List<Int>`) | Type parameters, bounds, and variance not implemented |
-| Long comparisons | `<`, `>`, `<=`, `>=` on Long operands (need `lcmp` opcode) |
-| `Nothing` | Not implemented |
-| Smart casts | Flow-sensitive type narrowing after `is` checks |
-| Type aliases | `typealias` not yet compiled |
+| Feature | Status |
+|---------|--------|
+| Nullable operators (`?.`, `?:`, `!!`) | Implemented — safe calls, elvis, non-null assertion |
+| Type checks (`is`/`!is`) | Implemented — emits `instanceof` with JVM type descriptors |
+| Smart casts | Implemented — `when`/`if` branch narrowing with `checkcast` + unbox for primitives |
+| Type casts (`as`/`as?`) | Parsed; safe cast (`as?`) returns null on failure |
+| Generics (`T`, `List<Int>`) | Implemented — type parameters, bounds, variance (in/out), star projection, reified |
+| `Nothing` | Implemented — bottom type, assignable to all types |
+| Type aliases | Implemented — `typealias` erased to underlying type |
+| `Char` type | Partial — char literals and `String[i]` return `Int` (no dedicated `Ty::Char` yet) |

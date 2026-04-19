@@ -81,13 +81,13 @@ native targets.
 | Sealed classes | [§4.5.5](https://kotlinlang.org/spec/declarations.html#sealed-class-declaration) | Hard | Sealed hierarchies, exhaustive when |
 | Generics | [§4.6](https://kotlinlang.org/spec/declarations.html#type-parameters) | Hard | Type parameters, bounds, variance |
 | Lambdas | [§7.2.10](https://kotlinlang.org/spec/expressions.html#lambda-literals) | Hard | Lambda literals, closures, `it` parameter |
-| Safe call (`?.`) | [§3.3](https://kotlinlang.org/spec/type-system.html#nullable-types) | Medium | Parsed; needs field/method dispatch on nullable receiver |
-| Non-null assert (`!!`) | [§3.3](https://kotlinlang.org/spec/type-system.html#nullable-types) | Easy | Parsed; passthrough (no NullPointerException yet) |
-| Type checks (`is`/`!is`) | [§7.6.3](https://kotlinlang.org/spec/expressions.html#type-checking-and-containment-checking-expressions) | Medium | Parsed; MIR lowered as stub (always true) |
-| Type casts (`as`/`as?`) | [§7.6.4](https://kotlinlang.org/spec/expressions.html#cast-expression) | Medium | Parsed; MIR lowered as no-op passthrough |
-| Try/catch | [§7.4.5](https://kotlinlang.org/spec/expressions.html#try-expression) | Medium | Parsed; catch blocks need JVM exception tables (try/finally works) |
-| Throw expression | [§7.4.6](https://kotlinlang.org/spec/expressions.html#throw-expressions) | Medium | Parsed; needs `athrow` opcode |
-| Collections | stdlib | Hard | `listOf`, `map`, `filter`, `fold` (needs generics + lambdas) |
+| Safe call (`?.`) | [§3.3](https://kotlinlang.org/spec/type-system.html#nullable-types) | Done | `x?.length` short-circuits to null if receiver is null |
+| Non-null assert (`!!`) | [§3.3](https://kotlinlang.org/spec/type-system.html#nullable-types) | Done | `x!!` unwraps nullable to non-null type |
+| Type checks (`is`/`!is`) | [§7.6.3](https://kotlinlang.org/spec/expressions.html#type-checking-and-containment-checking-expressions) | Done | `instanceof` + smart cast narrowing in `when`/`if` with checkcast + unbox |
+| Type casts (`as`/`as?`) | [§7.6.4](https://kotlinlang.org/spec/expressions.html#cast-expression) | Done | `checkcast` emission for safe and unsafe casts |
+| Try/catch | [§7.4.5](https://kotlinlang.org/spec/expressions.html#try-expression) | Done | Full exception tables, try-as-expression, multi-statement bodies |
+| Throw expression | [§7.4.6](https://kotlinlang.org/spec/expressions.html#throw-expressions) | Done | `athrow` emission with `Ty::Nothing` return type |
+| Collections | stdlib | Done | `listOf`, `map`, `filter`, `fold`, 25+ HOF extensions via kotlin-stdlib.jar |
 | Varargs | [§4.1.2](https://kotlinlang.org/spec/declarations.html#function-declaration) | Medium | `vararg` parameter, spread `*` |
 | Type aliases | [§4.7](https://kotlinlang.org/spec/declarations.html#type-alias) | Easy | `typealias` erased at compile time |
 | Destructuring | [§8.1](https://kotlinlang.org/spec/statements.html#destructuring-declarations) | Medium | `val (a, b) = pair` via `componentN()` |
