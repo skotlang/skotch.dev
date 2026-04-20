@@ -88,6 +88,8 @@ native targets.
 | Try/catch | [§7.4.5](https://kotlinlang.org/spec/expressions.html#try-expression) | Done | Full exception tables, try-as-expression, catch variable binding (`e.message`), multi-statement bodies |
 | Throw expression | [§7.4.6](https://kotlinlang.org/spec/expressions.html#throw-expressions) | Done | `athrow` opcode, exception constructors (`IllegalStateException`, etc.), `Nothing` return type |
 | Collections | stdlib | Done | `listOf`, `map`, `filter`, `fold`, 25+ HOF extensions via kotlin-stdlib.jar |
+| kotlin.math | stdlib | Done | `abs`, `sqrt`, `ceil`, `floor`, `round`, `pow`, `sin`, `cos`, `tan`, `log`, `exp` |
+| readLine/readln | stdlib | Done | `readLine()` reads stdin via `Scanner(System.in).nextLine()` |
 | Varargs | [§4.1.2](https://kotlinlang.org/spec/declarations.html#function-declaration) | Medium | `vararg` parameter, spread `*` |
 | Type aliases | [§4.7](https://kotlinlang.org/spec/declarations.html#type-alias) | Easy | `typealias` erased at compile time |
 | Destructuring | [§8.1](https://kotlinlang.org/spec/statements.html#destructuring-declarations) | Medium | `val (a, b) = pair` via `componentN()` |

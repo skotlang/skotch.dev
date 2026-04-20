@@ -143,6 +143,20 @@ Labeled break and continue (`break@label`, `continue@label`) are not
 yet supported.
 </Aside>
 
+## `in` Operator
+
+Check containment in ranges and collections:
+
+```kotlin
+val r = 1..10
+println(5 in r)    // true
+println(11 in r)   // false
+println(r.first)   // 1
+println(r.last)    // 10
+```
+
+The `in` operator desugars to `collection.contains(element)`. The `!in` operator negates the result.
+
 ## Return
 
 Early return from functions:
