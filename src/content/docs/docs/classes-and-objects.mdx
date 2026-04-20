@@ -62,24 +62,41 @@ fun main() {
 
 ## Current workarounds
 
-Until classes are supported, you can structure programs using top-level
-functions and extension functions:
+### Property getters and setters
+
+Custom property getters and setters are compiled to synthetic methods:
 
 ```kotlin
-// Instead of a class with methods, use top-level functions
-fun createGreeting(name: String): String = "Hello, $name!"
-
-// Extension functions can add methods to existing types
-fun Int.factorial(): Int {
-    var result = 1
-    for (i in 1..this) {
-        result *= i
-    }
-    return result
+class Counter {
+    var count: Int = 0
+        set(value) {
+            if (value >= 0) field = value  // `field` is the backing field
+        }
 }
 
 fun main() {
-    println(createGreeting("world"))
-    println(5.factorial())
+    val c = Counter()
+    c.count = 5     // invokes setter
+    println(c.count) // 5
+    c.count = -1    // rejected by setter (value < 0)
+    println(c.count) // still 5
+}
+```
+
+### Inner classes
+
+Inner classes hold an implicit reference to the enclosing class instance:
+
+```kotlin
+class Outer(val x: Int) {
+    inner class Inner(val y: Int) {
+        fun sum(): Int = x + y  // `x` from outer class
+    }
+}
+
+fun main() {
+    val outer = Outer(10)
+    val inner = outer.Inner(5)  // pass outer ref implicitly
+    println(inner.sum())         // 15
 }
 ```

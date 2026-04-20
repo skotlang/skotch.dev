@@ -83,4 +83,4 @@ not yet compiled.
 | Generics (`T`, `List<Int>`) | Implemented — type parameters, bounds, variance (in/out), star projection, reified |
 | `Nothing` | Implemented — bottom type, assignable to all types |
 | Type aliases | Implemented — `typealias` erased to underlying type |
-| `Char` type | Partial — char literals and `String[i]` return `Int` (no dedicated `Ty::Char` yet) |
+| `Char` type | Implemented — `Ty::Char` with `CharLit` token, `println('K')` prints `K`, `s[i]` returns `Char` |

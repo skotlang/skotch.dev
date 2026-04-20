@@ -85,8 +85,8 @@ native targets.
 | Non-null assert (`!!`) | [§3.3](https://kotlinlang.org/spec/type-system.html#nullable-types) | Done | `x!!` unwraps nullable to non-null type |
 | Type checks (`is`/`!is`) | [§7.6.3](https://kotlinlang.org/spec/expressions.html#type-checking-and-containment-checking-expressions) | Done | `instanceof` + smart cast narrowing in `when`/`if` with checkcast + unbox |
 | Type casts (`as`/`as?`) | [§7.6.4](https://kotlinlang.org/spec/expressions.html#cast-expression) | Done | `checkcast` emission for safe and unsafe casts |
-| Try/catch | [§7.4.5](https://kotlinlang.org/spec/expressions.html#try-expression) | Done | Full exception tables, try-as-expression, multi-statement bodies |
-| Throw expression | [§7.4.6](https://kotlinlang.org/spec/expressions.html#throw-expressions) | Done | `athrow` emission with `Ty::Nothing` return type |
+| Try/catch | [§7.4.5](https://kotlinlang.org/spec/expressions.html#try-expression) | Done | Full exception tables, try-as-expression, catch variable binding (`e.message`), multi-statement bodies |
+| Throw expression | [§7.4.6](https://kotlinlang.org/spec/expressions.html#throw-expressions) | Done | `athrow` opcode, exception constructors (`IllegalStateException`, etc.), `Nothing` return type |
 | Collections | stdlib | Done | `listOf`, `map`, `filter`, `fold`, 25+ HOF extensions via kotlin-stdlib.jar |
 | Varargs | [§4.1.2](https://kotlinlang.org/spec/declarations.html#function-declaration) | Medium | `vararg` parameter, spread `*` |
 | Type aliases | [§4.7](https://kotlinlang.org/spec/declarations.html#type-alias) | Easy | `typealias` erased at compile time |
