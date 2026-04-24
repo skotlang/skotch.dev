@@ -30,11 +30,13 @@ let colorIdx = 0;
             {done && <span class="roadmap-badge">Shipped</span>}
           </div>
           <p class="roadmap-desc">{m.description}</p>
-          {featureCount > 0 && !done && (() => {
+          {featureCount > 0 && (() => {
             const doneCount = m.features.filter((f: any) => f.completed).length;
-            const summaryText = doneCount > 0
-              ? `${doneCount}/${featureCount} feature${featureCount === 1 ? '' : 's'} complete`
-              : `${featureCount} feature${featureCount === 1 ? '' : 's'}`;
+            const summaryText = done
+              ? `${featureCount} feature${featureCount === 1 ? '' : 's'} shipped`
+              : doneCount > 0
+                ? `${doneCount}/${featureCount} feature${featureCount === 1 ? '' : 's'} complete`
+                : `${featureCount} feature${featureCount === 1 ? '' : 's'}`;
             return (
               <details class="roadmap-features">
                 <summary>{summaryText}</summary>
